@@ -1,78 +1,85 @@
 /*
+GITHUB
+    https://github.com/allen-wong-tech/asset-management
+
 DEMO
-    Fundamentals of asset managers: trade, cash, and positions
+    Fundamentals of asset managers: trade, cash, positions, PnL
     
 Problem Statement
     Asset managers have spent hundreds of millions on systems to accurately give a Single Version of Truth (SVOT) in real-time
-    Historically, all of this data has been siloed because one system couldn't handle all of the data and all of the users with high performance
 
-Why Snowflake
+Why Snowflake: Your benefits
     Significantly less cost of maintaining one high performance SVOT    
     SVOT makes trading, risk management, and regulatory reporting significantly easier
     Unlimited Compute and Concurrency enable quick data-driven decisions
 
 Scope of this demo
-    Show how to build trade, cash, and positions on Snowflake
-    Use Data Marketplace zepl_us_stocks_daily to get stock history
-    Use Window Functions to automate cash and position reporting
-    This shows Snowflake's industry capabilities; Then use Citibike demo for technical audience
+    Show how to query trade, cash, positions, and PnL on Snowflake
+    Use Data Marketplace to get stock history
+    Use Window Functions to automate cash, position, and PnL reporting
     
 */
+
+-----------------------------------------------------
+--context
+    use role finserv_admin; use warehouse finserv_devops_wh; use schema finserv.public;
+    
+    //if desired, resize compute
+    alter warehouse finserv_devops_wh set warehouse_size = 'small';
+
 
 -----------------------------------------------------
 --Object comments for a data dictionary
     select table_name, comment
     from finserv.information_schema.tables
-    where table_schema = 'PUBLIC' order by table_name;
-
-    //context
-    use role finserv_admin; use warehouse finserv_devops_wh; use schema finserv.public;
-    
-    //if desired, resize compute
-    alter warehouse finserv_devops_wh set warehouse_size = 'small';
-    
-    
------------------------------------------------------
---target objects for use case: asset manager - sharing position level data with investor
-//PREREQUISITES
-    //Zepl Marketplace share created as zepl_us_stocks_daily
+    where table_schema = 'PUBLIC'
+    order by table_name;
 
 
-//ASSET MANAGEMENT FIRM
 
-    //trade - date and quantity of buy, sell, or hold action on assets
+    //what is our biggest PnL now?
+        select symbol, date, trader, cash_now, num_share_now, close, market_value, PnL
+        from position_now where trader = 'charles'
+        order by PnL desc;
+        
+    //what is my position and PnL as-of a date?
+        select symbol, date, trader, cash_cumulative, num_shares_cumulative, close, market_value, PnL
+        from position where date >= '2019-01-01' and symbol = 'MSFT' and trader = 'charles'
+        order by date;
+        
+        
+          //dynamic view using window functions so only pay storage for trade table; trade table drives all
+              select get_ddl('table','position');   
+
+
+    //trade - date and quantity of buy, sell, or hold action on assets: This controls the position view
         select top 1000 * 
-        from trade where trader = 'charles' 
+        from trade 
+        where date >= '2019-01-01' and symbol = 'MSFT' and trader = 'charles'
         order by symbol, date;          
         
-        //ansi sql; comments for queryable metadata and data catalog
-            select get_ddl('table','trade');   
+            //ansi sql; comments for queryable metadata and data catalog
+                select get_ddl('table','trade');   
 
-    //what is my position as-of a date?
-        select top 1000 p.*
-        from position p
-        where p.symbol = 'SBUX' and date > '2019-01-01'
-        order by date, trader;
 
-        //dynamic view using window functions
-            select get_ddl('table','position');   
+
 
 //MARKET DATA
-    //stock_history - free, daily-updated Zepl stock_history but with duplicates removed
-        //Zepl is a Snowflake partner founded by the creators of Zeppelin notebook
-        select * from stock_history where symbol = 'SBUX' order by date desc limit 100;
+        //stock_history from Data Marketplace
+        //Factset / S&P: Instant access to entire catalog (Terabytes in seconds)
+        select * 
+        from stock_history
+        where symbol = 'SBUX'
+        order by date desc;
         
-    //stock_latest - latest available stock prices
-        select * from stock_latest limit 100;           
+    //stock_latest - real-time stock quotes with zero maintenance
+        select top 100 s.*
+        from stock_latest s
+        inner join watchlist w on s.symbol = w.symbol
+        order by 1;
         
-            //view on a share - notice CTE and comment for data dictionary
-            select get_ddl('view','stock_latest');
 
-    //company_profile - remove dated columns in Zepl's version (Please note beta and mktcap are inaccurately static as this is just an example)
-        select * from company_profile limit 100;        
-        
-        //what is our current position?
-        select top 300 * from position_now where symbol = 'SBUX' order by trader;
 
     //BI demo
-    
+
+
