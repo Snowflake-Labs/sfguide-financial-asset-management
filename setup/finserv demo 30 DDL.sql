@@ -1,5 +1,5 @@
 /*
-Run these scripts
+Run these scripts to setup DDL
 
 */
 
@@ -28,8 +28,7 @@ alter warehouse finserv_devops_wh set warehouse_size = 'medium';
         )
         select symbol, date, open, high, low, close, volume, adjclose
         from cte
-        where num = 1
-        order by symbol;
+        where num = 1;
         
 //        select top 10 * from finserv.public.stock_history;
 
@@ -46,8 +45,7 @@ alter warehouse finserv_devops_wh set warehouse_size = 'medium';
         )
         select symbol, date, open, high, low, close, volume, adjclose
         from cte
-        where num = 1
-        order by symbol;
+        where num = 1;
 
 //        select top 10 * from finserv.public.stock_latest where symbol = 'SBUX';
 
@@ -117,27 +115,52 @@ alter warehouse finserv_devops_wh set warehouse_size = 'medium';
               'charles' Trader, 'warren' PM
           from finserv.public.stock_history h
           inner join finserv.public.watchlist w on h.symbol = w.symbol 
-          where (h.close <> 0 and year(date) = 2019 and month(date) <> 1) or (h.close <> 0 and year(date) = 2020) 
-        order by 3,1;
+          where (h.close <> 0 and year(date) = 2019 and month(date) <> 1) or (h.close <> 0 and year(date) = 2020)
+          order by 8,2,1;
         
 //        select top 300 * from trade where date = '2019-01-03' and symbol = 'SBUX';
 
         -----------------------------------------------------
-          create or replace view finserv.public.position comment = 'what assets owned; demo window function running sum'
+          create or replace view finserv.public.position comment = 'what assets owned; demo Window Function running sum'
           as
+          with cte as
+          (
+              select 
+                  t.symbol, exchange, t.date, trader, pm,
+                  Sum(num_shares) OVER(partition BY t.symbol, exchange, trader ORDER BY t.date rows UNBOUNDED PRECEDING ) num_shares_cumulative,
+                  Sum(cash) OVER(partition BY t.symbol, exchange, trader ORDER BY t.date rows UNBOUNDED PRECEDING ) cash_cumulative,
+                  s.close
+              from finserv.public.trade t
+              inner join finserv.public.stock_history s on t.symbol = s.symbol and s.date = t.date
+          )
           select 
-              symbol, exchange, date, trader, pm,
-              Sum(num_shares) OVER(partition BY symbol, exchange, trader ORDER BY date rows UNBOUNDED PRECEDING ) num_shares_cumulative,
-              Sum(cash) OVER(partition BY symbol, exchange, trader ORDER BY date rows UNBOUNDED PRECEDING ) cash_cumulative
-          from finserv.public.trade
-          order by 1,2,3;
+            *,
+            num_shares_cumulative * close as market_value, 
+            (num_shares_cumulative * close) + cash_cumulative as PnL
+          from cte;
           
-          select top 300 * from position where date = '2019-01-03' and symbol = 'SBUX'
-          union
-                    select top 300 * from position where date = '2019-01-07' and symbol = 'SBUX';
+          select top 300 * 
+          from position where date between '2019-01-01' and  '2019-01-31' and symbol = 'SBUX' and trader = 'charles'
+          order by date;
+          
+          
+          select 
+              t.symbol, exchange, t.date, trader, pm,
+              Sum(num_shares) OVER(partition BY t.symbol, exchange, trader ORDER BY t.date rows UNBOUNDED PRECEDING ) num_shares_cumulative,
+              Sum(cash) OVER(partition BY t.symbol, exchange, trader ORDER BY t.date rows UNBOUNDED PRECEDING ) cash_cumulative
+                ,s.close
+          from finserv.public.trade t
+          inner join finserv.public.stock_history s on t.symbol = s.symbol and s.date = t.date
+            where t.symbol = 'SBUX' and t.date > '2018-01-01' and trader = 'charles'
+                                                                                    order by 1,2,3;
+
+//select top 300 * from stock_history;
+
+
 
         -----------------------------------------------------
-          create or replace view finserv.middleware.share_now comment = 'current position, shares, and cash we have now; demo last_value ranking; placed in middleware schema since not really for end user consumption'
+          create or replace view finserv.middleware.share_now comment = 'current position, shares, and cash we have now; demo last_value ranking; 
+                placed in middleware schema since not really for end user consumption'
           as
           with cte as
           (
@@ -159,9 +182,9 @@ alter warehouse finserv_devops_wh set warehouse_size = 'medium';
         create or replace view position_now comment = 'current market price to show value now'
         as
         select p.*, l.close, l.date,
-            num_share_now * close market_value
+            num_share_now * close as market_value,
+            (num_share_now * close) + cash_now as PnL
         from finserv.middleware.share_now p
-        left outer join stock_latest l on p.symbol = l.symbol
-        order by 1;
+        left outer join stock_latest l on p.symbol = l.symbol;
         
 //                select top 300 * from position_now where symbol = 'SBUX';
