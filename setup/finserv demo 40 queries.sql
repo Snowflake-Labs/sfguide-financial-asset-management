@@ -24,36 +24,47 @@ Scope of this demo
 --context
     use role finserv_admin; use warehouse finserv_devops_wh; use schema finserv.public;
     
-    //if desired, resize compute
+    //if desired, resize compute - we start low to save money
     alter warehouse finserv_devops_wh set warehouse_size = 'small';
-
 
 -----------------------------------------------------
 --Object comments for a data dictionary
-    select table_name, comment
+    select table_type, table_name, comment
     from finserv.information_schema.tables
     where table_schema = 'PUBLIC'
-    order by table_name;
+    order by 1,2;
+    
+    --column comments
+    select table_name, column_name, comment
+    from finserv.information_schema.columns
+    where table_schema = 'PUBLIC' and comment is not null
+    order by table_name, ordinal_position;
 
 
-
-    //what is our biggest PnL now?
-        select symbol, date, trader, cash_now, num_share_now, close, market_value, PnL
+    //what is the current PnL for trader charles? - view on trade table so always updated as trade populated
+        select symbol, date, trader, PM, cash_now, num_share_now, close, market_value, PnL
         from position_now where trader = 'charles'
         order by PnL desc;
         
+    //see ranked PnL for a random trader - no indexes, statistics, vacuuming, maintenance
+        set trader = (select top 1 trader from trader sample(10));
+
+        select symbol, date, trader, PM, cash_now, num_share_now, close, market_value, PnL
+        from position_now
+        where trader = $trader
+        order by PnL desc;
+        
+
     //what is my position and PnL as-of a date?
         select symbol, date, trader, cash_cumulative, num_shares_cumulative, close, market_value, PnL
         from position where date >= '2019-01-01' and symbol = 'MSFT' and trader = 'charles'
         order by date;
         
-        
           //dynamic view using window functions so only pay storage for trade table; trade table drives all
               select get_ddl('table','position');   
 
-
     //trade - date and quantity of buy, sell, or hold action on assets: This controls the position view
-        select top 1000 * 
+        select * 
         from trade 
         where date >= '2019-01-01' and symbol = 'MSFT' and trader = 'charles'
         order by symbol, date;          
@@ -64,7 +75,7 @@ Scope of this demo
 
 
 
-//MARKET DATA
+//Instant Real-Time Market Data
         //stock_history from Data Marketplace
         //Factset / S&P: Instant access to entire catalog (Terabytes in seconds)
         select * 
@@ -77,7 +88,38 @@ Scope of this demo
         from stock_latest s
         inner join watchlist w on s.symbol = w.symbol
         order by 1;
+
+
+----------------------------------------------------------------------------------------------------------
+--//Big Data Analysis - size up instantly
+    alter warehouse finserv_devops_wh set warehouse_size = 'xlarge';
+    
+    //what is most profitable position now?
+        select symbol, date, trader, cash_now, num_share_now, close, market_value, PnL
+        from position_now
+        order by PnL desc;
+
+    //see ranked PnL for a random as-of date - unique micropartitions filter out
+        set date = (select top 1 date from trade sample(10));
         
+        select symbol, date, trader, cash_cumulative, num_shares_cumulative, close, market_value, PnL
+        from position
+        where date = $date
+        order by PnL desc;
+
+    //we are done, resize compute down
+        alter warehouse finserv_devops_wh set warehouse_size = 'small';
+
+
+
+
+
+
+//Recap
+    //Showed Window Function view on position that give PnL, Cash, As-of-date PnL
+    //Data Instantly from Data Marketplace with zero maintenance going forward
+    //Trade table drives everything
+    //FOSS so you can start building on this code
 
 
     //BI demo
