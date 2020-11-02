@@ -1,6 +1,7 @@
 /*
 Why
-    We demo running these first in the background since the stress-tests takes about 10 minutes
+    We demo running these first in the background since the stress-tests takes a few minutes
+    Run-time depending on our number of traders (trading 1000 trades a day since 2010)
 
 What we will see
     What is the most profitable position of all-time now?  Window function over 10 billion rows (10 years of data)
@@ -53,8 +54,25 @@ What we will see
 
 
 
-    //we are done, resize compute down
+    //You can persist these to tables for significantly faster reporting
+
+
+
+
+
+    //To see history query results:
+        //Open History (In far right of results pane) | SQL
+
+
+
+
+
+
+    //we are done, resize compute down 
         alter warehouse finserv_datascience_wh set warehouse_size = 'small';
+        
+    //option to shutdown
+        alter warehouse finserv_datascience_wh suspend;
 
 
 

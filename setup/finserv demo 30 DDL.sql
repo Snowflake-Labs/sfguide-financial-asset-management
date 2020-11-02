@@ -3,17 +3,18 @@ Run these scripts to setup DDL
 
 */
 
-use role finserv_admin; use warehouse finserv_devops_wh; use schema finserv.public;
+use role finserv_admin; use warehouse finserv_datascience_wh; use schema finserv.public;
 
 --size up since we are generating many trades 
-alter warehouse finserv_devops_wh set warehouse_size = 'xxlarge';
+alter warehouse finserv_datascience_wh set warehouse_size = 'xxlarge';
 
 -----------------------------------------------------
 --OPTION: Set number of traders to be used
 
-//            limit 5000;     //stress test
-//            limit 100;     //use for fast tests
-    set limit_trader = 1000;
+
+    set limit_trader = 1000;        //on xxlarge - 2.1B trades; this build takes 1m45s; script 35 stress script takes 1m10s
+//    set limit_trader = 2000;        //on xxlarge - 4.2B trades; this build takes 3m; script 35 stress script takes 2m10s
+//    set limit_trader = 3000;        //on xxlarge - 6.4B trades; this build takes 4m40s ; script 35 stress script takes 3m20s
 
 
 
@@ -74,9 +75,8 @@ alter warehouse finserv_devops_wh set warehouse_size = 'xxlarge';
                 where close < 1 or close > 4500
             )
             order by mktcap desc
-        //2 of 2 RAISE THE LIMIT FOR MORE STRESS TESTING
-            limit 1000;             //stress test
-            //            limit 10;  //use for fast tests
+            //Option: raise the limit for more stress testing
+            limit 1000;      
 
 
 
@@ -240,4 +240,7 @@ alter warehouse finserv_devops_wh set warehouse_size = 'xxlarge';
 //                select top 300 * from position_now where symbol = 'SBUX';
 
         --size down to save money
-        alter warehouse finserv_devops_wh set warehouse_size = 'small';
+        alter warehouse finserv_datascience_wh set warehouse_size = 'small';
+        
+        //option to shutdown
+        alter warehouse finserv_datascience_wh suspend;
