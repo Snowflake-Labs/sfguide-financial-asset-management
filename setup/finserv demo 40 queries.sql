@@ -1,10 +1,4 @@
 /*
-GITHUB
-    https://github.com/allen-wong-tech/asset-management
-
-DEMO
-    Fundamentals of asset managers: trade, cash, positions, PnL
-    
 Problem Statement
     Asset managers have spent hundreds of millions on systems to accurately give a Single Version of Truth (SVOT) in real-time
 
@@ -13,9 +7,9 @@ Why Snowflake: Your benefits
     SVOT makes trading, risk management, and regulatory reporting significantly easier
     Unlimited Compute and Concurrency enable quick data-driven decisions
 
-Scope of this demo
-    Show how to query trade, cash, positions, and PnL on Snowflake
-    Use Data Marketplace to get stock history
+What we will see
+    Use Data Marketplace to instantly get stock history
+    Query trade, cash, positions, and PnL on Snowflake
     Use Window Functions to automate cash, position, and PnL reporting
     
 */
@@ -28,17 +22,18 @@ Scope of this demo
     alter warehouse finserv_devops_wh set warehouse_size = 'small';
 
 -----------------------------------------------------
---Object comments for a data dictionary
-    select table_type, table_name, comment
+--View, table, and column comments for a data dictionary
+    select table_name object_name, comment, table_type object_type
     from finserv.information_schema.tables
     where table_schema = 'PUBLIC'
-    order by 1,2;
-    
-    --column comments
-    select table_name, column_name, comment
+        union all
+    select table_name || '.' || column_name object_type, comment, 'COLUMN' object_type
     from finserv.information_schema.columns
     where table_schema = 'PUBLIC' and comment is not null
-    order by table_name, ordinal_position;
+    order by 1;
+
+
+
 
 
     //what is the current PnL for trader charles? - view on trade table so always updated as trade populated
@@ -90,24 +85,8 @@ Scope of this demo
         order by 1;
 
 
-----------------------------------------------------------------------------------------------------------
---//Big Data Analysis - size up instantly
-    alter warehouse finserv_devops_wh set warehouse_size = 'xlarge';
-    
-    //what is most profitable position now?
-        select symbol, date, trader, cash_now, num_share_now, close, market_value, PnL
-        from position_now
-        order by PnL desc;
 
-    //see ranked PnL for a random as-of date - unique micropartitions filter out
-        set date = (select top 1 date from trade sample(10));
-        
-        select symbol, date, trader, cash_cumulative, num_shares_cumulative, close, market_value, PnL
-        from position
-        where date = $date
-        order by PnL desc;
-
-    //we are done, resize compute down
+    //we are done, resize compute down to save costs
         alter warehouse finserv_devops_wh set warehouse_size = 'small';
 
 
@@ -115,13 +94,15 @@ Scope of this demo
 
 
 
-//Recap
-    //Showed Window Function view on position that give PnL, Cash, As-of-date PnL
-    //Data Instantly from Data Marketplace with zero maintenance going forward
-    //Trade table drives everything
-    //FOSS so you can start building on this code
+/*Recap what we saw & benefits
+    Use Data Marketplace to instantly get stock history - no more waiting, ETL pain 
+    Query trade, cash, positions, and PnL on Snowflake - support your business logic
+    Use Window Functions to automate cash, position, and PnL reporting - get started quickly with this code
 
+
+
+
+    //Stress test
 
     //BI demo
-
-
+*/

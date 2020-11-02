@@ -6,59 +6,15 @@ Run these scripts to setup DDL
 use role finserv_admin; use warehouse finserv_devops_wh; use schema finserv.public;
 
 --size up since we are generating many trades 
-alter warehouse finserv_devops_wh set warehouse_size = 'xlarge';
+alter warehouse finserv_devops_wh set warehouse_size = 'xxlarge';
 
+-----------------------------------------------------
+--OPTION: Set number of traders to be used
 
+//            limit 5000;     //stress test
+//            limit 100;     //use for fast tests
+    set limit_trader = 1000;
 
-
-
-
-
-
-
-
-----------------------------------------------------------------------------------------------------------
---Market Data Objects
-        create or replace view finserv.public.stock_history
-            comment = 'zepl_us_stocks_daily stock_history but with duplicates removed'
-        as
-        with cte as
-        (
-          select *,
-          row_number() over (partition by symbol,date order by date) num
-          from zepl_us_stocks_daily.public.stock_history
-        )
-        select symbol, date, open, high, low, close, volume, adjclose
-        from cte
-        where num = 1;
-
-        //        select top 10 * from finserv.public.stock_history;
-
-      -----------------------------------------------------
-        create or replace view finserv.public.stock_latest
-            comment = 'latest available stock prices; We use SBUX since NYSE seems to come in at a later time; remove duplicates via row_number'
-        as
-        with cte as
-        (
-          select *,
-          row_number() over (partition by symbol order by symbol) num
-          from finserv.public.stock_history
-          where date = (select max(date) from zepl_us_stocks_daily.public.stock_history where symbol = 'SBUX')
-        )
-        select symbol, date, open, high, low, close, volume, adjclose
-        from cte
-        where num = 1;
-
-        //        select top 10 * from finserv.public.stock_latest where symbol = 'SBUX';
-
-      -----------------------------------------------------
-        create or replace view finserv.public.company_profile
-            comment = 'company profile; Note: Beta and mktcap change daily but we will use these static numbers as a proxy for now; we exclude columns that change with the date'
-        as
-        select symbol, exchange, companyname, industry, website, description, ceo, sector, beta, mktcap::number mktcap
-        from zepl_us_stocks_daily.public.company_profile;
-
-        //        select top 300 * from finserv.public.company_profile;
 
 
 
@@ -93,17 +49,19 @@ alter warehouse finserv_devops_wh set warehouse_size = 'xlarge';
       where num = 1
       order by 2,1
       //1 of 2 RAISE THE LIMIT FOR MORE STRESS TESTING
-      //      limit 10000;
-      //      limit 5000;
-            limit 100;
+            limit $limit_trader;
+//            limit 5000;     //stress test
+//            limit 100;     //use for fast tests
       
-      comment on column public.trader.PM is 'Portfolio Manager';
+      comment on column public.trader.PM is 'Portfolio Manager (PM) manages traders';
       comment on column public.trader.buying_power is 'Trader is authorized this buying power in each transaction';
       
 
 
         --remove authorization of trades that have a close <1 or >4500
-        create or replace temp table middleware.temp_watchlist as
+        create or replace temp table middleware.temp_watchlist 
+            comment = 'ensure stock is still traded and has a close price within our buying power'
+        as
             select c.*, 'all_authorized' Trader
             from finserv.public.company_profile c
             inner join finserv.public.stock_latest l on c.symbol = l.symbol     --ensure stock still traded 
@@ -117,9 +75,8 @@ alter warehouse finserv_devops_wh set warehouse_size = 'xlarge';
             )
             order by mktcap desc
         //2 of 2 RAISE THE LIMIT FOR MORE STRESS TESTING
-            //            limit 2000;
-            limit 1000;
-            //            limit 1;  //use for testing
+            limit 1000;             //stress test
+            //            limit 10;  //use for fast tests
 
 
 
@@ -134,7 +91,7 @@ alter warehouse finserv_devops_wh set warehouse_size = 'xlarge';
 
 
         -----------------------------------------------------
-            create or replace table finserv.public.watchlist
+            create or replace transient table finserv.public.watchlist
                 comment = 'what assets we are interested in owning'
             as
             select *, 'charles'::varchar(50) Trader
@@ -221,7 +178,8 @@ alter warehouse finserv_devops_wh set warehouse_size = 'xlarge';
 
 
         -----------------------------------------------------
-          create or replace view finserv.public.position comment = 'what assets owned; demo Window Function running sum'
+          create or replace view finserv.public.position 
+            comment = 'what assets owned; demo Window Function running sum'
           as
           with cte as
           (
@@ -249,8 +207,9 @@ alter warehouse finserv_devops_wh set warehouse_size = 'xlarge';
 
 
         -----------------------------------------------------
-          create or replace view finserv.middleware.share_now comment = 'current position, shares, and cash we have now; demo last_value ranking; 
-                placed in middleware schema since not really for end user consumption'
+          create or replace view finserv.middleware.share_now 
+            comment = 'current position, shares, and cash we have now; demo last_value ranking; 
+            placed in middleware schema since not really for end user consumption'
           as
           with cte as
           (
@@ -269,7 +228,8 @@ alter warehouse finserv_devops_wh set warehouse_size = 'xlarge';
           
         -----------------------------------------------------
         --position_now
-        create or replace view position_now comment = 'current market price to show value now'
+        create or replace view position_now 
+            comment = 'current market price to show value now'
         as
         select p.*, l.close, l.date,
             num_share_now * close as market_value,
