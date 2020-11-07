@@ -20,7 +20,8 @@ Asset managers have spent hundreds of millions on systems to accurately give a S
     Run Script 30: Populates the trade table.  Creates Window Function Views for cash & PnL
     
 ### Optional Setting:
-In the first few lines of script 30, you can set the variable *limit_trader = x*
+In the first few lines of script 30, you can set the variable *limit_trader = x*.
+
 It's default is set to 1000 traders to populate in the trader table which when multplied by ten years of daily trades will create 2.1 billion trades.  So you can create 6 billion or more trades for stress-testing and this is the relationship:
     
 limit_trader  | Trades generated | Script 30 Run-time with xxlarge compute
@@ -30,9 +31,9 @@ limit_trader  | Trades generated | Script 30 Run-time with xxlarge compute
 3000          | 6.4 billion      | 4:40 (4 minutes : 40 seconds)
     
 ## How to Demo
-    Run script 40: Show the use case, benefits, sample queries
+    Run script 40: Show the use case, benefits, and sample queries
     
 ## Optional Demo
-    Run script 50: Stress-test query via Window Functions on all data
+    Run script 50: Stress-test queries via Window Functions on all data
     
   
