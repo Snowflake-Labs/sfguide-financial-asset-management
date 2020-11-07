@@ -3,14 +3,13 @@ Run these scripts to setup DDL
 
 */
 
-use role finserv_admin; use warehouse finserv_datascience_wh; use schema finserv.public;
+use role finservam_admin; use warehouse finservam_datascience_wh; use schema finservam.public;
 
 --size up since we are generating many trades 
-alter warehouse finserv_datascience_wh set warehouse_size = 'xxlarge';
+alter warehouse finservam_datascience_wh set warehouse_size = 'xxlarge';
 
 -----------------------------------------------------
 --OPTION: Set number of traders to be used
-
 
     set limit_trader = 1000;        //on xxlarge - 2.1B trades; this build takes 1m45s; script 35 stress script takes 1m10s
 //    set limit_trader = 2000;        //on xxlarge - 4.2B trades; this build takes 3m; script 35 stress script takes 2m10s
@@ -37,7 +36,7 @@ alter warehouse finserv_datascience_wh set warehouse_size = 'xxlarge';
       where rlike(trader,'[A-Z][A-Z][A-Z]') = 'TRUE' and rlike(PM,'[A-Z][A-Z]') = 'TRUE';
 
       --with dupes removed
-      create or replace transient table finserv.public.trader comment = 'Trader with their PM and authorized buying power'
+      create or replace transient table trader comment = 'Trader with their PM and authorized buying power'
       as
       with cte as
       (
@@ -64,14 +63,14 @@ alter warehouse finserv_datascience_wh set warehouse_size = 'xxlarge';
             comment = 'ensure stock is still traded and has a close price within our buying power'
         as
             select c.*, 'all_authorized' Trader
-            from finserv.public.company_profile c
-            inner join finserv.public.stock_latest l on c.symbol = l.symbol     --ensure stock still traded 
+            from public.company_profile c
+            inner join public.stock_latest l on c.symbol = l.symbol     --ensure stock still traded 
             where mktcap is not null
             and exchange like 'N%'
             and c.symbol not in 
             (
                 select distinct symbol
-                from finserv.public.stock_history
+                from public.stock_history
                 where close < 1 or close > 4500
             )
             order by mktcap desc
@@ -91,11 +90,11 @@ alter warehouse finserv_datascience_wh set warehouse_size = 'xxlarge';
 
 
         -----------------------------------------------------
-            create or replace transient table finserv.public.watchlist
+            create or replace transient table public.watchlist
                 comment = 'what assets we are interested in owning'
             as
             select *, 'charles'::varchar(50) Trader
-            from finserv.public.company_profile
+            from company_profile
             where symbol in ('AMZN','CAT','COF','GE','GOOG','MCK','MSFT','NFLX','SBUX','TSLA','VOO','XOM')
                 union all
             select * from middleware.temp_watchlist
@@ -109,7 +108,7 @@ alter warehouse finserv_datascience_wh set warehouse_size = 'xxlarge';
 
 
         -----------------------------------------------------
-        create or replace transient table finserv.public.trade
+        create or replace transient table trade
             comment = 'trades made and cash used; unique_key: symbol, exchange, date'
         as
         --buy for all traders except Charles
@@ -122,8 +121,8 @@ alter warehouse finserv_datascience_wh set warehouse_size = 'xxlarge';
          (
             select
                 date, h.symbol, w.exchange, 'buy'::varchar(25) action, close
-            from finserv.public.stock_history h
-            inner join finserv.public.watchlist w on h.symbol = w.symbol and w.trader = 'all_authorized'
+            from stock_history h
+            inner join watchlist w on h.symbol = w.symbol and w.trader = 'all_authorized'
             where h.close <> 0 and year(date) between 2010 and 2019
          ) c
          full outer join public.trader t
@@ -138,8 +137,8 @@ alter warehouse finserv_datascience_wh set warehouse_size = 'xxlarge';
          (
             select
                 date, h.symbol, w.exchange, 'hold'::varchar(25) action, close
-            from finserv.public.stock_history h
-            inner join finserv.public.watchlist w on h.symbol = w.symbol and w.trader = 'all_authorized'
+            from stock_history h
+            inner join watchlist w on h.symbol = w.symbol and w.trader = 'all_authorized'
             where h.close <> 0 and year(date) >= 2020
          ) c
          full outer join public.trader t
@@ -149,8 +148,8 @@ alter warehouse finserv_datascience_wh set warehouse_size = 'xxlarge';
               date, h.symbol, w.exchange, 'buy'::varchar(25) action, close, round(1000000/close,0) num_shares, 
               close * round(1000000/close,0) * -1 cash,
               'charles' Trader, 'warren' PM
-          from finserv.public.stock_history h
-          inner join finserv.public.watchlist w on h.symbol = w.symbol and w.trader = 'charles'
+          from stock_history h
+          inner join watchlist w on h.symbol = w.symbol and w.trader = 'charles'
           where h.close <> 0 and year(date) = 2019 and month(date) = 1
         union all
           --for charles sell $10K in value for each ticker in Mar 2019
@@ -158,16 +157,16 @@ alter warehouse finserv_datascience_wh set warehouse_size = 'xxlarge';
                 date, h.symbol, w.exchange, 'sell' action, close, round(10000/close,0) * -1 num_shares, 
                 close * round(10000/close,0) cash,
                 'charles' Trader, 'warren' PM
-            from finserv.public.stock_history h
-            inner join finserv.public.watchlist w on h.symbol = w.symbol and w.trader = 'charles'
+            from stock_history h
+            inner join watchlist w on h.symbol = w.symbol and w.trader = 'charles'
             where h.close <> 0 and year(date) = 2019 and month(date) = 3
         union all
           --for charles hold action so shares and cash don't change
           select
               date, h.symbol, w.exchange, 'hold' action, close, 0, 0 cash,
               'charles' Trader, 'warren' PM
-          from finserv.public.stock_history h
-          inner join finserv.public.watchlist w on h.symbol = w.symbol and w.trader = 'charles'
+          from public.stock_history h
+          inner join public.watchlist w on h.symbol = w.symbol and w.trader = 'charles'
           where (h.close <> 0 and year(date) = 2019 and month(date) not in (1,3)) or (h.close <> 0 and year(date) >= 2020)
         order by 8,2,1;--Trader, symbol, date
         
@@ -178,7 +177,7 @@ alter warehouse finserv_datascience_wh set warehouse_size = 'xxlarge';
 
 
         -----------------------------------------------------
-          create or replace view finserv.public.position 
+          create or replace view public.position 
             comment = 'what assets owned; demo Window Function running sum'
           as
           with cte as
@@ -188,8 +187,8 @@ alter warehouse finserv_datascience_wh set warehouse_size = 'xxlarge';
                   Sum(num_shares) OVER(partition BY t.symbol, exchange, trader ORDER BY t.date rows UNBOUNDED PRECEDING ) num_shares_cumulative,
                   Sum(cash) OVER(partition BY t.symbol, exchange, trader ORDER BY t.date rows UNBOUNDED PRECEDING ) cash_cumulative,
                   s.close
-              from finserv.public.trade t
-              inner join finserv.public.stock_history s on t.symbol = s.symbol and s.date = t.date
+              from public.trade t
+              inner join public.stock_history s on t.symbol = s.symbol and s.date = t.date
           )
           select 
             *,
@@ -207,7 +206,7 @@ alter warehouse finserv_datascience_wh set warehouse_size = 'xxlarge';
 
 
         -----------------------------------------------------
-          create or replace view finserv.middleware.share_now 
+          create or replace view middleware.share_now 
             comment = 'current position, shares, and cash we have now; demo last_value ranking; 
             placed in middleware schema since not really for end user consumption'
           as
@@ -218,7 +217,7 @@ alter warehouse finserv_datascience_wh set warehouse_size = 'xxlarge';
                 last_value(num_shares_cumulative) over (partition by symbol, exchange, trader order by date) as num_share_now,
                 last_value(cash_cumulative) over (partition by symbol, exchange, trader order by date) as cash_now,
                 case when last_value(date) over (partition by symbol, exchange, trader order by date) = date then 1 else 0 end is_current
-            from finserv.public.position
+            from public.position
           )
           select symbol, exchange, trader, pm, num_share_now, cash_now
           from cte
@@ -234,13 +233,13 @@ alter warehouse finserv_datascience_wh set warehouse_size = 'xxlarge';
         select p.*, l.close, l.date,
             num_share_now * close as market_value,
             (num_share_now * close) + cash_now as PnL
-        from finserv.middleware.share_now p
+        from middleware.share_now p
         left outer join stock_latest l on p.symbol = l.symbol;
         
 //                select top 300 * from position_now where symbol = 'SBUX';
 
         --size down to save money
-        alter warehouse finserv_datascience_wh set warehouse_size = 'small';
+        alter warehouse finservam_datascience_wh set warehouse_size = 'small';
         
         //option to shutdown
-        alter warehouse finserv_datascience_wh suspend;
+        alter warehouse finservam_datascience_wh suspend;

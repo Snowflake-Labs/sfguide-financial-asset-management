@@ -1,10 +1,17 @@
 /*
-Why
-    We demo running these first in the background since the stress-tests takes a few minutes
-    Run-time depending on our number of traders (trading 1000 trades a day since 2010)
+Problem Statement
+    Big Data Analysis has been painful because:
+        inability to scale compute instantly up and down
+        fast querying has required expert and expensive tuning
+        ad-hoc queries take a long time
+
+Why Snowflake: Your benefits
+    Scale compute instantly so you get the performance you pay for
+    Then instantly lower or suspend compute to save money for when you will need it again
+    No more cubes and less need for optimization
 
 What we will see
-    What is the most profitable position of all-time now?  Window function over 10 billion rows (10 years of data)
+    What is the most profitable position of all-time now?  Window function over billions of trades
     What is ranked PnL for a random as-of date?  Window function up to any given date
 
     
@@ -12,7 +19,7 @@ What we will see
 
 -----------------------------------------------------
 --context
-    use role finserv_admin; use warehouse finserv_datascience_wh; use schema finserv.public;
+    use role finservam_admin; use warehouse finservam_datascience_wh; use schema finservam.public;
     
 
 
@@ -21,28 +28,30 @@ What we will see
 
 ----------------------------------------------------------------------------------------------------------
 --//Big Data Analysis - size up compute instantly
-    alter warehouse finserv_datascience_wh set warehouse_size = 'xxlarge';
+    alter warehouse finservam_datascience_wh set warehouse_size = 'xxlarge';
     
         
     
     
     
-    //what is most profitable position of all-time now?  Window function over 10 billion rows (10 years of data)
+    //what is most profitable position of all-time now?  Window function over billions of trades [float over trade]
     //We could persist but want to show stress-test and history cache
+    //1000 traders: xxlarge takes 37 seconds; 1M rows returned
         select symbol, date, trader, cash_now, num_share_now, close, market_value, PnL
         from position_now
         order by PnL desc;
 
 
 
-    //float over trade table to see the row count
+
         //select get_ddl('view','position_now');
 
 
 
 
     //what is ranked PnL for a random as-of date?  Window function up to any given date
-        set date = (select top 1 date from trade sample(10));
+    //1000 traders: xxlarge takes 30 seconds
+        set date = (select top 1 date from trade sample(1));
         
         select symbol, date, trader, cash_cumulative, num_shares_cumulative, close, market_value, PnL
         from position
@@ -50,11 +59,6 @@ What we will see
         order by PnL desc;
 
 
-
-
-
-
-    //You can persist these to tables for significantly faster reporting
 
 
 
@@ -69,21 +73,21 @@ What we will see
 
 
     //we are done, resize compute down 
-        alter warehouse finserv_datascience_wh set warehouse_size = 'small';
+        alter warehouse finservam_datascience_wh set warehouse_size = 'small';
         
     //option to shutdown
-        alter warehouse finserv_datascience_wh suspend;
+        alter warehouse finservam_datascience_wh suspend;
 
 
 
 
 
 
-//Recap and benefits of what we showed:
-    //    What is the most profitable position of all-time now?  Window function over 10 billion rows (10 years of data)
-    //    What is ranked PnL for a random as-of date?  Window function up to any given date
+/*Recap what we saw & benefits
+    What is the most profitable position of all-time now?
+    What is ranked PnL for a random as-of date?
 
-
-
-//BI demo
-
+    Scale compute instantly so you get the performance you pay for
+    Then instantly lower or suspend compute to save money for when you will need it again
+    No more cubes and less need for optimization
+*/

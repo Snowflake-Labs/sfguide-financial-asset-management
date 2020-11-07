@@ -16,19 +16,19 @@ What we will see
 
 -----------------------------------------------------
 --context
-    use role finserv_admin; use warehouse finserv_devops_wh; use schema finserv.public;
+    use role finservam_admin; use warehouse finservam_devops_wh; use schema finservam.public;
     
     //if desired, resize compute - we start low to save money
-    alter warehouse finserv_devops_wh set warehouse_size = 'small';
+    alter warehouse finservam_devops_wh set warehouse_size = 'small';
 
 -----------------------------------------------------
 --View, table, and column comments for a data dictionary
     select table_name object_name, comment, table_type object_type
-    from finserv.information_schema.tables
+    from information_schema.tables
     where table_schema = 'PUBLIC'
         union all
     select table_name || '.' || column_name object_type, comment, 'COLUMN' object_type
-    from finserv.information_schema.columns
+    from information_schema.columns
     where table_schema = 'PUBLIC' and comment is not null
     order by 1;
 
@@ -42,7 +42,7 @@ What we will see
         order by PnL desc;
         
     //see ranked PnL for a random trader - no indexes, statistics, vacuuming, maintenance
-        set trader = (select top 1 trader from trader sample(10));
+        set trader = (select top 1 trader from trader sample(1));
 
         select symbol, date, trader, PM, cash_now, num_share_now, close, market_value, PnL
         from position_now
@@ -71,14 +71,14 @@ What we will see
 
 
 //Instant Real-Time Market Data
-        //stock_history from Data Marketplace
+        //free stock_history from Data Marketplace
         //Factset / S&P: Instant access to entire catalog (Terabytes in seconds)
         select * 
         from stock_history
         where symbol = 'SBUX'
         order by date desc;
         
-    //stock_latest - real-time stock quotes with zero maintenance
+    //stock_latest - free real-time stock quotes with zero maintenance
         select top 100 s.*
         from stock_latest s
         inner join watchlist w on s.symbol = w.symbol
@@ -87,7 +87,7 @@ What we will see
 
 
     //we are done, resize compute down to save costs
-        alter warehouse finserv_devops_wh set warehouse_size = 'small';
+        alter warehouse finservam_devops_wh set warehouse_size = 'small';
 
 
 
@@ -99,10 +99,8 @@ What we will see
     Query trade, cash, positions, and PnL on Snowflake - support your business logic
     Use Window Functions to automate cash, position, and PnL reporting - get started quickly with this code
 
-
-
-
-    //Stress test
-
-    //BI demo
 */
+
+
+
+//BI demo
