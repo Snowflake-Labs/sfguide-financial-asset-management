@@ -96,7 +96,7 @@ alter warehouse finserv_datascience_wh set warehouse_size = 'xxlarge';
             as
             select *, 'charles'::varchar(50) Trader
             from finserv.public.company_profile
-            where symbol in ('AMZN','CAT','COF','GE','GOOG','MCK','MSFT','NFLX','SBUX','VOO','XOM')
+            where symbol in ('AMZN','CAT','COF','GE','GOOG','MCK','MSFT','NFLX','SBUX','TSLA','VOO','XOM')
                 union all
             select * from middleware.temp_watchlist
             order by trader, symbol, exchange;
