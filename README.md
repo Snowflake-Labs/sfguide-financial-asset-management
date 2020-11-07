@@ -2,7 +2,7 @@
 
 ## Why this Demo
 ### Problem Statement
-    Asset managers have spent hundreds of millions on systems to accurately give a Single Version of Truth (SVOT) in real-time
+Asset managers have spent hundreds of millions on systems to accurately give a Single Version of Truth (SVOT) in real-time
 
 ### Why Snowflake: Your benefits
     Significantly less cost of maintaining one high performance SVOT    
@@ -20,14 +20,14 @@
     Run Script 30: Populates the trade table.  Creates Window Function Views for cash & PnL
     
 ### Optional Setting:
-    Script 30: In the first few lines allows you to set *limit_trader = x*
-    It's default is set to 1000 traders to populate in the trader table which when multplied by ten years of daily trades will create 2.1 billion trades.  So you can create billions of trades for stress-testing and this is the relationship:
+In the first few lines of script 30, you can set the variable *limit_trader = x*
+It's default is set to 1000 traders to populate in the trader table which when multplied by ten years of daily trades will create 2.1 billion trades.  So you can create 6 billion or more trades for stress-testing and this is the relationship:
     
-limit_trader | Trades generated | Script 30 Run-time with xxlarge compute
--------------|------------------|------------------------------
-1000         | 2.1 billion      | 1:45 (1 minute  : 45 seconds)
-2000         | 4.2 billion      | 3:00 (3 minutes)
-3000         | 6.4 billion      | 4:40 (4 minutes : 40 seconds)
+limit_trader  | Trades generated | Script 30 Run-time with xxlarge compute
+--------------|------------------|------------------------------
+1000 (default)| 2.1 billion      | 1:45 (1 minute  : 45 seconds)
+2000          | 4.2 billion      | 3:00 (3 minutes)
+3000          | 6.4 billion      | 4:40 (4 minutes : 40 seconds)
     
 ## How to Demo
     Run script 40: Show the use case, benefits, sample queries
