@@ -14,6 +14,10 @@ On Database Objects to your left, Click "Refresh Now" and see the Zepl share
 
 */
 
+--double-check permissions have been granted if forgotten in step above
+use role accountadmin;
+    grant imported privileges on database zepl_us_stocks_daily to role finservam_admin;
+
 -----------------------------------------------------
 --smoke test
     use role finservam_admin;
