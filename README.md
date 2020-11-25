@@ -31,9 +31,14 @@ limit_trader  | Trades generated | Script 30 Run-time with xxlarge compute
 3000          | 6.4 billion      | 4:40 (4 minutes : 40 seconds)
     
 ## How to Demo
-    Run script 40: Show the use case, benefits, and sample queries
+    Run script 40: Show the use case, benefits, and sample queries 
+
+## How to Demo SnowSight
+    Build SnowSight dashboard using script 35
     
 ## Optional Demo
     Run script 50: Stress-test queries via Window Functions on all data
-    
   
+## To remove Demo
+    Run "optional\finserv option reset.sql"
+    Delete SnowSight Dashboard "finserv demo 35 SnowSight"
