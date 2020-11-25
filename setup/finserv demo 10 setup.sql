@@ -23,6 +23,11 @@ What we will see
         with warehouse_size = 'xsmall' auto_suspend = 300 initially_suspended = true comment = 'Financial Services DevOps Compute';
     create warehouse if not exists finservam_datascience_wh
         with warehouse_size = 'xsmall' auto_suspend = 300 initially_suspended = true comment = 'DataScience will often scale to extremes';
+    create warehouse if not exists xsmall_const_wh
+        with warehouse_size = 'xsmall' auto_suspend = 60 initially_suspended = true comment = 'Constant so should always be XS and not resized';
+        
+        
+        
     
 //Optional: Create a finservam user to connect to Snowflake with
 //REPLACE PASSWORD WITH YOUR OWN
@@ -47,6 +52,9 @@ What we will see
     
     grant ownership on warehouse finservam_devops_wh to role finservam_admin;
     grant ownership on warehouse finservam_datascience_wh to role finservam_admin;
+    
+    grant ownership on warehouse xsmall_const_wh to role sysadmin;
+    grant monitor, operate, usage on warehouse xsmall_const_wh to role finservam_admin;
     
     grant role finservam_admin to role sysadmin;
 

@@ -11,9 +11,9 @@ alter warehouse finservam_datascience_wh set warehouse_size = 'xxlarge';
 -----------------------------------------------------
 --OPTION: Set number of traders to be used
 
-    set limit_trader = 1000;        //on xxlarge - 2.1B trades; this build takes 1m45s; script 35 stress script takes 1m10s
-//    set limit_trader = 2000;        //on xxlarge - 4.2B trades; this build takes 3m; script 35 stress script takes 2m10s
-//    set limit_trader = 3000;        //on xxlarge - 6.4B trades; this build takes 4m40s ; script 35 stress script takes 3m20s
+    set limit_trader = 1000;        //on xxlarge - 2.1B trades; this build takes 1m45s
+//    set limit_trader = 2000;        //on xxlarge - 4.2B trades; this build takes 3m
+//    set limit_trader = 3000;        //on xxlarge - 6.4B trades; this build takes 4m40s
 
 
 
@@ -30,10 +30,12 @@ alter warehouse finservam_datascience_wh set warehouse_size = 'xxlarge';
           select
               upper(randstr(3, random()))::varchar(50) trader,
               upper(randstr(2, random()))::varchar(50) PM,
-              uniform(4000, 8000, random()) buying_power
+              uniform(4000, 8000, random())::number buying_power
           from table (generator(rowcount => 60000))
       ) c
       where rlike(trader,'[A-Z][A-Z][A-Z]') = 'TRUE' and rlike(PM,'[A-Z][A-Z]') = 'TRUE';
+      
+//      select * from middleware.temp_trader order by 1;
 
       --with dupes removed
       create or replace transient table trader comment = 'Trader with their PM and authorized buying power'
@@ -52,11 +54,9 @@ alter warehouse finservam_datascience_wh set warehouse_size = 'xxlarge';
             limit $limit_trader;
 //            limit 5000;     //stress test
 //            limit 100;     //use for fast tests
-      
-      comment on column public.trader.PM is 'Portfolio Manager (PM) manages traders';
-      comment on column public.trader.buying_power is 'Trader is authorized this buying power in each transaction';
-      
 
+      
+//select * from trader order by 1 desc;
 
         --remove authorization of trades that have a close <1 or >4500
         create or replace temp table middleware.temp_watchlist 
@@ -76,9 +76,6 @@ alter warehouse finservam_datascience_wh set warehouse_size = 'xxlarge';
             order by mktcap desc
             //Option: raise the limit for more stress testing
             limit 1000;      
-
-
-
 
 
 
@@ -237,6 +234,21 @@ alter warehouse finservam_datascience_wh set warehouse_size = 'xxlarge';
         left outer join stock_latest l on p.symbol = l.symbol;
         
 //                select top 300 * from position_now where symbol = 'SBUX';
+
+
+
+      --demonstrate transactions and ACID compliance
+      begin;
+          delete from trader where trader in (select top 1 trader from trader);
+          delete from trader where trader = 'charles';
+
+          insert into trader
+          select 'charles' trader, 'warren' PM, 2000000 buying_power;
+      commit;
+      
+      comment on column public.trader.PM is 'Portfolio Manager (PM) manages traders';
+      comment on column public.trader.buying_power is 'Trader is authorized this buying power in each transaction';
+
 
         --size down to save money
         alter warehouse finservam_datascience_wh set warehouse_size = 'small';
