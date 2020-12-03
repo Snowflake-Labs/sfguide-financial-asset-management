@@ -10,14 +10,14 @@ Asset managers have spent hundreds of millions on systems to accurately give a S
     Unlimited Compute and Concurrency enable quick data-driven decisions
 
 ### What we will see
-    Use Data Marketplace to instantly get stock history
-    Query trade, cash, positions, and PnL on Snowflake
-    Use Window Functions to automate cash, position, and PnL reporting
+    Use Data Marketplace to instantly get stock history so the business doesn't have to wait for IT.
+    Populate only the trade table and use window functions to generate cash, positions, and Profit-and-Loss (PnL) so that you can have real-time updates.
+    Use SnowSight - Snowflake's complimentary User Interface (UI) - to generate dashboards that can be shared with the business so that you don't need licenses for an additional Business Intelligence (BI) tool.
 
-## How to Install
+## How to Install (Only takes about 5 minutes to execute)
     Run Script 10: Sets up the environment
     Run Script 20: Connects to the Data Marketplace to get free stock history
-    Run Script 30: Populates the trade table.  Creates Window Function Views for cash & PnL
+    Run Script 30: Populates the trade table.  Creates Window Function Views for cash, positions, and PnL
     
 ### Optional Setting:
 In the first few lines of script 30, you can set the variable *limit_trader = x*.
@@ -34,7 +34,7 @@ limit_trader  | Trades generated | Script 30 Run-time with xxlarge compute
     Run script 40: Show the use case, benefits, and sample queries 
 
 ## How to Demo SnowSight
-    Build SnowSight dashboard using script 35
+    Build SnowSight dashboard using script 35 and then demo it
     
 ## Optional Demo
     Run script 50: Stress-test queries via Window Functions on all data
