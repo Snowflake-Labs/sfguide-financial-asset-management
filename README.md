@@ -38,6 +38,12 @@ limit_trader  | Trades generated | Script 30 Run-time with xxlarge compute
     
 ## Optional Demo
     Run script 50: Stress-test queries via Window Functions on all data
+    
+## Partner Demos on top of this demo
+
+[Data Build Tool (DBT)](https://github.com/ruwhite11/AssetManagement): Open-Sourced by a hedge fund prospect.  DBT gives you software engineering best practices on big data with concepts like Don't Repeat Yourself and Analytics Engineer.
+
+[Sigma Computing](https://sigmacomputing.wistia.com/medias/w7ck8dugdp): Excel-like analysis over 2 billion rows powered with only Snowflake Small compute power
   
 ## To remove Demo
     Run "optional\finserv option reset.sql"
