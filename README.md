@@ -34,19 +34,21 @@ limit_trader  | Trades generated | Script 30 Run-time with xxlarge compute
     Run script 40: Show the use case, benefits, and sample queries 
 
 ## How to Demo SnowSight
-    Build SnowSight dashboard using script 35 and then demo it
+    In snowsight subfolder:
+        Add filters in script "33 filter SnowSight"
+        Build SnowSight dashboard using script "35 SnowSight".
     
 ## Optional Demo
-    Run script 50: Stress-test queries via Window Functions on all data
+    Run script 50: Stress-test queries via Window Functions on all data (shows scaling up to XLarge compute)
     
 ## Partner Demos on top of this demo
 
 [Data Build Tool (DBT)](https://github.com/ruwhite11/AssetManagement): Open-Sourced by a hedge fund prospect.  DBT gives you software engineering best practices on big data with concepts like Don't Repeat Yourself and Analytics Engineer.
 
-[Sigma Computing](https://sigmacomputing.wistia.com/medias/w7ck8dugdp): Excel-like analysis over 2 billion rows powered with only Snowflake Small compute power
+[Sigma Computing](https://sigmacomputing.wistia.com/medias/w7ck8dugdp): Excel-like analysis over 2 billion rows powered with only Snowflake Small compute power.
 
 [Zepl](https://www.youtube.com/watch?v=PuY7LpklunM&feature=youtu.be): Founded by the creators of the Zeppelin notebook, Zepl provides a serverless way for you to easily secure, scale, and share your data science workloads (Python, SQL, R, or Scala) against Snowflake.
   
 ## To remove Demo
-    Run "optional\finserv option reset.sql"
-    Delete SnowSight Dashboard "finserv demo 35 SnowSight"
+    Run "optional\finserv option reset.sql".
+    If you implemented SnowSight, delete Filters and Dashboard in snowsight subfolder: scripts 33 and 35.
