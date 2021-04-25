@@ -1,5 +1,9 @@
 /*
-We want to use the Data Marketplace to get a free Data Share from Zepl 
+What we will do in "script 20":
+    Use a free share from the Data Marketplace to get stock price history
+    Data Governance via RBAC by adding finservam_admin as role that can access data
+    Data Quality Check by ensuring no duplicates
+
 
 Use role AccountAdmin on Snowflake level
 Data Marketplace | Explore the Data Marketplace | Search for "Zepl"
@@ -31,6 +35,10 @@ use role accountadmin;
     from "ZEPL_US_STOCKS_DAILY"."PUBLIC"."STOCK_HISTORY" 
     where symbol in ('AAPL') order by date desc;
     
+    
+
+
+
 
 
 ----------------------------------------------------------------------------------------------------------
@@ -51,7 +59,7 @@ use role accountadmin;
         
         comment on column stock_history.close is 'closing price used for all transactions';
 
-//                select top 10 * from finservam.public.stock_history;
+
 
 
 
@@ -72,7 +80,7 @@ use role accountadmin;
         where num = 1
         order by symbol;//remove if a view
 
-//                select top 10 * from finservam.public.stock_latest where symbol = 'SBUX';
+
 
 
 
@@ -85,9 +93,16 @@ use role accountadmin;
         from zepl_us_stocks_daily.public.company_profile;
         
 
-        //        select top 300 * from finservam.public.company_profile;
-/*        
-select top 300 * from zepl_us_stocks_daily.public.stock_history where symbol = 'AMZN' order by date desc;
- 
-select top 300 * from finservam.public.stock_latest order by close desc;
+-----------------------------------------------------
+--suspend Virtual Warehouse to save credits
+    alter warehouse finservam_devops_wh suspend;
+
+
+/*
+Recap
+
+Use a free share from the Data Marketplace to get stock price history
+Data Governance via RBAC by adding finservam_admin as role that can access data
+Data Quality Check by ensuring no duplicates
+
 */
