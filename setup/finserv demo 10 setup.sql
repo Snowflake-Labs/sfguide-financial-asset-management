@@ -70,3 +70,13 @@ What we will see
 
     use schema finservam.public;
     
+
+/*
+Recap
+
+Setup the objects needed:
+    roles (Role Based Access Control RBAC)
+    warehouses (isolated and instant compute)
+    database finservam
+    all objects owned by finservam_admin role
+*/
