@@ -47,13 +47,13 @@ begin transaction;
         with trader as
         (
           select distinct c_first_name trader
-          from "snowflake_sample_data"."tpcds_sf10tcl"."customer"
+          from snowflake_sample_data.tpcds_sf10tcl.customer
           where c_first_name is not null
           limit $limit_trader
         ), PM as
         (
           select distinct c_last_name PM, pm_id.nextval id
-          from "snowflake_sample_data"."tpcds_sf10tcl"."customer"
+          from snowflake_sample_data.tpcds_sf10tcl.customer
           where c_last_name is not null
         ), trader2 as
         (
