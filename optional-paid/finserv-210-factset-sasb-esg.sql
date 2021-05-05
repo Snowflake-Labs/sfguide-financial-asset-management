@@ -4,6 +4,8 @@ Overview
     to calculate (Environmental, Social, and Governance) ESG scores
     
     https://www.snowflake.com/datasets/factset-truvalue-labs-sasb-codified-datafeed/
+    
+    https://github.com/Snowflake-Labs/sfguide-financial-asset-management/blob/master/optional-paid/finserv-210-factset-sasb-esg.sql
 
 
 SASB Materiality Metrics:
@@ -34,7 +36,14 @@ SASB Materiality Metrics:
 --cross-database join Factset's data with our Portfolio data
     use schema finservam.public;
 
+    --get the latest Factset ESG data
+        --we use a Common Table Expression (CTE) to get the most recent date
     create or replace view FACTSET_ESG_VW as
+    with cte
+    as
+    (
+        select max (tv_date) tv_date from factset_snowflake_esg_demo_share.tv_v2.tv_esg_ranks
+    )
     SELECT cov.proper_name,
            split_part(tr.ticker_region,'-',1) as ticker,
            split_part(tr.ticker_region,'-',2) as region,
@@ -52,11 +61,9 @@ SASB Materiality Metrics:
       ON id.factset_id = cov.fsym_security_id
     JOIN "FACTSET_SNOWFLAKE_ESG_DEMO_SHARE"."TV_V2"."TV_ESG_RANKS" AS ter
       ON ter.tv_instrument_id = id.provider_id
+    JOIN cte on cte.tv_date = ter.tv_date
     WHERE 
-    REGION = 'US'
-    AND
-    tv_date = '2021-02-28'
-    order by ter.tv_date desc;
+        REGION = 'US';
 
 --Query Factset ESG Data - FAANG Stocks
     SELECT * 
@@ -74,11 +81,12 @@ SASB Materiality Metrics:
 
 
 
+
 --Create View for ESG + Company Profile
     create or replace view COMPANY_PROFILE_ESG as
-    select * from COMPANY_PROFILE as co
-    inner join FACTSET_ESG_VW as esg
-    on co.symbol = esg.ticker;
+    select * 
+    from FACTSET_ESG_VW as esg 
+    join COMPANY_PROFILE as co on co.symbol = esg.ticker;
 
     --what is the ESG for a certain ticker?
     select top 300 * 
@@ -95,7 +103,8 @@ SASB Materiality Metrics:
 
 
 --ESG for Financial Services ordered by ESG descending
-    select COMPANYNAME, SYMBOL, SECTOR, BETA, MKTCAP, ALL_CATEGORIES_ADJ_INSIGHT, ALL_CATEGORIES_IND_PCTL, ALL_CATEGORIES_ESG_RANK, MATERIALITY_ADJ_INSIGHT, MATERIALITY_IND_PCTL, MATERIALITY_ESG_RANK
+    select COMPANYNAME, SYMBOL, SECTOR, BETA, MKTCAP, ALL_CATEGORIES_ADJ_INSIGHT, ALL_CATEGORIES_IND_PCTL, ALL_CATEGORIES_ESG_RANK, 
+        MATERIALITY_ADJ_INSIGHT, MATERIALITY_IND_PCTL, MATERIALITY_ESG_RANK
     from COMPANY_PROFILE_ESG
     where SECTOR = 'Financial Services' --'Technology'
     and ALL_CATEGORIES_ESG_RANK in ('Leader','Above Average')
