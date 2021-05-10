@@ -24,7 +24,7 @@ What we will see
     create warehouse if not exists finservam_datascience_wh
         with warehouse_size = 'xsmall' auto_suspend = 300 initially_suspended = true comment = 'DataScience will often scale to extremes';
     create warehouse if not exists xsmall_const_wh
-        with warehouse_size = 'xsmall' auto_suspend = 60 initially_suspended = true comment = 'Constant so should always be XS and not resized';
+        with warehouse_size = 'xsmall' auto_suspend = 1 initially_suspended = true comment = 'Constant so should always be XS and not resized';
         
         
         
