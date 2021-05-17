@@ -2,7 +2,7 @@
 
 ## Why this Demo
 ### Problem Statement
-Asset managers have spent hundreds of millions on systems to accurately give a Single Version of Truth (SVOT) in real-time
+Asset managers have spent hundreds of millions on systems to accurately give a Single Version of Truth (SVOT) in real-time.  What would such a system look like on Snowflake?
 
 ### Why Snowflake: Your benefits
     Significantly less cost of maintaining one high performance SVOT    
@@ -13,6 +13,11 @@ Asset managers have spent hundreds of millions on systems to accurately give a S
     Use Data Marketplace to instantly get stock history so the business doesn't have to wait for IT.
     Populate only the trade table and use window functions to generate cash, positions, and Profit-and-Loss (PnL) so that you can have real-time updates.
     Use SnowSight - Snowflake's complimentary User Interface (UI) - to generate dashboards that can be shared with the business so that you don't need licenses for an additional Business Intelligence (BI) tool.
+
+## Demo and Technical Deep-Dive
+[Youtube Playlist](https://www.youtube.com/playlist?list=PLyKI7j42vSkbryDXuB7kEhzk66lmdNJ3Z)
+
+[Medium Blog](https://allenwongtech.medium.com/what-would-snowflake-for-an-asset-manager-look-like-part-1-a0583c0e5822)
 
 ## How to Install (Only takes about 5 minutes to execute)
     Run Script 10: Sets up the environment
