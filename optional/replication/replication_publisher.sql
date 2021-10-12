@@ -6,7 +6,7 @@ Documentation
     https://docs.snowflake.com/en/user-guide/database-replication-failover.html
 
 Open-Source
-    https://github.com/Snowflake-Labs/sfguide-financial-asset-management/new/master/optional/replication/replication_publisher.sql
+    https://github.com/Snowflake-Labs/sfguide-financial-asset-management/blob/master/optional/replication/replication_publisher.sql
     https://github.com/Snowflake-Labs/sfguide-financial-asset-management
 
 Youtube Demo of this replication
