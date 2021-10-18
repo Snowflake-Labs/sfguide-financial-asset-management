@@ -1,0 +1,220 @@
+
+/*=========DEMO SCRIPT FOR RBAC and Row Access Policy==========================*/
+
+/*  =============================================================
+    Create datateam_role (main-tenant) with 
+    Dedicated compute(s) with AutoScaling and On-Demand Elasticity, 
+    Read-Write to maintenant schema and
+    DOES NOT have access to subtenant workarea
+    =============================================================  */
+
+
+use role sysadmin;
+--create or replace database FINSERVAM;
+--create  or replace schema FINSERVAM.PUBLIC;
+--drop schema FINSERVAM.public;
+create  or replace warehouse datateam_wh auto_suspend=60 max_cluster_count=3;
+
+
+use role accountadmin;
+create or replace role datateam_role;
+grant role datateam_role to role sysadmin;
+grant ownership on database FINSERVAM to datateam_role;
+grant ownership on schema FINSERVAM.PUBLIC to datateam_role;
+grant ownership on warehouse datateam_wh to datateam_role;
+grant ownership on all tables in schema FINSERVAM.PUBLIC to datateam_role;
+grant ownership on all views in schema FINSERVAM.PUBLIC to datateam_role;
+
+grant role datateam_role to user amit;
+
+
+/*  =============================================================
+    Create pm_carpenter_role (sub-tenant) with 
+    Dedicated compute(s) with AutoScaling,
+    Read-only to maintenant schema,
+    Read-Write to subtenant workarea database and
+    Has Cost Governance Limits with Resource Monitors
+    =============================================================  */
+    
+
+
+use role sysadmin;
+create or replace warehouse pm_carpenter_wh warehouse_size ='xlarge' auto_suspend=60 max_cluster_count=3;
+create or replace database pm_carpenter_workdb;
+
+
+
+use role accountadmin;
+create or replace role pm_carpenter_role;
+grant role pm_carpenter_role to role sysadmin;
+
+grant ownership on database pm_carpenter_workdb  to pm_carpenter_role;
+grant usage on warehouse pm_carpenter_wh to pm_carpenter_role;
+
+grant usage on database FINSERVAM to pm_carpenter_role;
+grant usage on schema FINSERVAM.PUBLIC to pm_carpenter_role;
+grant select on all tables in schema FINSERVAM.PUBLIC to pm_carpenter_role;
+grant select on all views in schema FINSERVAM.PUBLIC to pm_carpenter_role;
+grant usage on future schemas in database FINSERVAM to pm_carpenter_role;
+grant select on future tables in schema FINSERVAM.PUBLIC to pm_carpenter_role; 
+grant select on future views in schema FINSERVAM.PUBLIC to pm_carpenter_role;
+
+
+use role accountadmin;
+CREATE or REPLACE RESOURCE MONITOR "pm_carpenter_RM" WITH CREDIT_QUOTA = 100, frequency = 'MONTHLY', start_timestamp = 'IMMEDIATELY', end_timestamp = null 
+ TRIGGERS 
+ ON 90 PERCENT DO SUSPEND 
+ ON 100 PERCENT DO SUSPEND_IMMEDIATE 
+ ON 80 PERCENT DO NOTIFY;
+ALTER WAREHOUSE pm_carpenter_WH SET RESOURCE_MONITOR = "pm_carpenter_RM";
+
+grant role pm_carpenter_role to user amit;
+
+
+
+/*  ============================================================= 
+    Test datateam_role (main-tenant) with 
+    Dedicated compute(s) with AutoScaling and On-Demand Elasticity, 
+    Read-Write to maintenant schema and
+    DOES NOT have access to subtenant workarea
+    =============================================================  */
+
+
+--> Successful as expected. MainTenant Role has read/write access to MainTenant Schema
+--> MainTenant Role can use auto-scaling and on-demand elasticity of cluster.  
+use role datateam_role;
+use schema  FINSERVAM.PUBLIC;
+use warehouse datateam_wh;
+-- Joins 2.2B Rows and agg. Takes 10s  
+alter warehouse datateam_wh set warehouse_size='xlarge';
+create or replace table trade_agg as select t.pm, t.trader, t.symbol, sum(t.cash) as total_cash, sum(t.num_shares) as total_shares, sum(tr.buying_power) as total_buy_power  from "FINSERVAM"."PUBLIC"."TRADE" t inner join "FINSERVAM"."PUBLIC"."TRADER" tr on t.PM = tr.PM and t.trader = tr.trader group by 1,2,3;
+--Loads 1K Rows 
+alter warehouse datateam_wh set warehouse_size='medium';
+create or replace table trader as select * from "FINSERVAM"."PUBLIC"."TRADER";
+alter warehouse datateam_wh suspend;
+
+--> Fails as expected. MainTenant Role can NO access to Subtenent WorkArea Schema
+use role datateam_role;
+use database pm_carpenter_workdb;
+
+
+
+/*  ============================================================= 
+    Test pm_carpenter_role (sub-tenant) with
+    Dedicated compute(s) with AutoScaling,
+    Read-only to maintenant schema,
+    Read-Write to subtenant workarea schema and
+    Has Cost Governance Limits with Resource Monitors
+    =============================================================  */
+
+--> Fails as expected. Subtenant role cannot modify in MainTenant Schema
+use role pm_carpenter_role;
+use schema FINSERVAM.PUBLIC;
+create or replace table test (c1 int);
+
+--> Successful as expected. Subtenant role has read/write access to MainTenant Schema
+use role pm_carpenter_role;
+use database pm_carpenter_workdb;
+create or replace schema my_schema;
+create or replace table test (c1 int);
+
+--> Successful as expected. Subtenant role has read only access to MainTenant Schema
+use role pm_carpenter_role;
+use warehouse pm_carpenter_wh;
+select * from FINSERVAM.PUBLIC.trade limit 10;
+
+--> Fails as expected. Subtenant role cannot modify Warehouse (Compute) but can "use" to run queries with autoscaling
+use role pm_carpenter_role;
+use warehouse pm_carpenter_wh;
+alter warehouse pm_carpenter_wh set warehouse_size='large';
+
+
+
+
+------- RLS CLS DEMO ----
+
+
+/*  =============================================================
+    Create trader_angelica_role (sub-tenant) with 
+    same privileges as parent PM
+    =============================================================  */
+    
+
+use role accountadmin;
+create or replace role trader_angelica_role;
+grant role trader_angelica_role to role pm_carpenter_role;
+
+grant ownership on database pm_carpenter_workdb  to trader_angelica_role;
+grant usage on warehouse pm_carpenter_wh to trader_angelica_role;
+
+grant usage on database FINSERVAM to trader_angelica_role;
+grant usage on schema FINSERVAM.PUBLIC to trader_angelica_role;
+grant select on all tables in schema FINSERVAM.PUBLIC to trader_angelica_role; 
+grant select on all views in schema FINSERVAM.PUBLIC to trader_angelica_role;
+grant usage on future schemas in database FINSERVAM to trader_angelica_role;
+grant select on future tables in schema FINSERVAM.PUBLIC to trader_angelica_role; 
+grant select on future views in schema FINSERVAM.PUBLIC to trader_angelica_role;
+
+
+
+grant role trader_angelica_role to user amit;
+
+
+--RLS
+--Maintenant sets up entitlement to Rows by SubTenant
+use role datateam_role;
+use schema FINSERVAM.PUBLIC;
+
+--select distinct SYMBOL from FINSERVAM.PUBLIC.trade;
+
+
+create or replace table entitlements (
+tenant_snowflake_role string,
+tenant_snowflake_account_name string,
+entitlement_pm string,
+entitlement_trader string
+);
+
+insert into entitlements values ('PM_CARPENTER_ROLE',null,'Carpenter', 'ALL'),('TRADER_ANGELICA_ROLE',null,'Carpenter', 'Angelica') ;
+select * from entitlements ;
+
+--select current_account();
+create or replace row access policy FINSERVAM.PUBLIC.pm_trader_policy as (PM varchar,TRADER varchar) returns boolean ->
+  --IF MainTenant account then show all data
+  'DMA61659' = current_account() and ('DATATEAM_ROLE' = current_role() or 'ACCOUNTADMIN'= current_role() or 'SYSADMIN' = current_role()) 
+  --IF Consumer account and Only Indicator Flag is SET Then Show all SIC and ALL MAILING STATES for that Indicator
+      or exists (
+            select 1 from FINSERVAM.PUBLIC.entitlements
+              where (tenant_snowflake_account_name = current_account() or tenant_snowflake_role = current_role())
+                and entitlement_pm = PM
+                and entitlement_trader = 'ALL'    
+          )
+        or exists (
+            select 1 from FINSERVAM.PUBLIC.entitlements
+              where (tenant_snowflake_account_name = current_account() or tenant_snowflake_role = current_role())
+                and entitlement_pm = PM
+                and entitlement_trader = TRADER
+          );
+
+
+--alter table FINSERVAM.PUBLIC.trade drop row access policy FINSERVAM.PUBLIC.pm_trader_policy;
+alter table FINSERVAM.PUBLIC.trade add row access policy FINSERVAM.PUBLIC.pm_trader_policy on (PM, TRADER);
+
+--PM has access to his PM  and all actions.
+use role pm_carpenter_role;
+use warehouse pm_carpenter_wh;
+--2.2B Rows -> 1M Rows Qualified and Aggregated. on XL Compute (45s)
+select  PM, TRADER, sum(cash) as total_cash from "TRADE" group by 1,2;
+
+--trader_angelica has access to symbol ABBV and buy actions only
+use role trader_angelica_role;
+use warehouse pm_carpenter_wh;
+--2.2B Rows -> 1.76M Rows Qualified and Aggregated. on XL Compute (45s)
+select  PM, TRADER, sum(cash) as total_cash from "TRADE" group by 1,2;
+
+--GPTM ROLE has access to all symbols, all actions.
+use role datateam_role;
+use warehouse datateam_wh;
+--2.2B Rows Accessible and Aggregated. on M Compute (12s)
+select  PM, TRADER, sum(cash) as total_cash from "TRADE" group by 1,2;
+
