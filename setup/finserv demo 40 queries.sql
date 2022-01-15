@@ -66,7 +66,7 @@ What we will see
         
         
 
-    //what is my position and PnL as-of a date?
+    //what is my position and PnL as-of a date?  Also, run the query a second time and notice the 24 hour global cache
         select symbol, date, trader, cash_cumulative, num_shares_cumulative, close, market_value, PnL
         from position where date >= '2019-01-01' and symbol = 'MSFT' and trader = 'charles'
         order by date;
