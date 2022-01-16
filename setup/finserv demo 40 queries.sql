@@ -19,8 +19,9 @@ What we will see
     use role finservam_admin; use warehouse finservam_devops_wh; use schema finservam.public;
     
     //if desired, resize compute - we start low to save money
-    alter warehouse finservam_devops_wh set warehouse_size = 'small';
+    alter warehouse finservam_devops_wh set warehouse_size = 'xsmall';
 
+    /*. XSMALL SMALL MEDIUM LARGE XLARGE X2LARGE X3LARGE X4LARGE  */
 
 
 
@@ -41,17 +42,19 @@ What we will see
 
 
 
-
     //what is the current PnL for trader charles? - view on trade table so always updated as trade populated
         //notice it is a non-materialized window function view on 2 billion rows
-        select symbol, date, trader, PM, cash_now, num_share_now, close, market_value, PnL
+        select
+            symbol, date, trader, PM, 
+            to_varchar(cash_now::numeric(36,2), '999,999,999,999.00') cash_now, 
+            to_varchar(num_share_now, '999,999,999,999') num_share_now,
+            to_varchar(close::numeric(36,2), '999,999,999,999.00') close, 
+            to_varchar(market_value::numeric(36,2), '999,999,999,999.00') market_value, 
+            to_varchar(PnL::numeric(36,2), '999,999,999,999.00') PnL
         from position_now where trader = 'charles'
         order by PnL desc;
         
-        
-        
-        
-        
+                
         
     //see ranked PnL for a random trader - no indexes, statistics, vacuuming, maintenance
         set trader = (select top 1 trader from trader sample(10) where trader is not null);
@@ -62,19 +65,23 @@ What we will see
         order by PnL desc;
         
         
+
         
         
         
 
-    //what is my position and PnL as-of a date?  Also, run the query a second time and notice the 24 hour global cache
+    //what is my position and PnL as-of a date?  
+        //notice 24 hour global cache on 2nd execution
         select symbol, date, trader, cash_cumulative, num_shares_cumulative, close, market_value, PnL
-        from position where date >= '2019-01-01' and symbol = 'MSFT' and trader = 'charles'
+        from position where date >= '2019-01-01' and symbol = 'AMZN' and trader = 'charles'
         order by date;
-
-
         
+
+
           //dynamic view using window functions so only pay storage for trade table; trade table drives all
               select get_ddl('view','position');   
+              
+
 
 
 
@@ -86,7 +93,7 @@ What we will see
     //trade - date and quantity of buy, sell, or hold action on assets: This controls the position view
         select * 
         from trade 
-        where date >= '2019-01-01' and symbol = 'MSFT' and trader = 'charles'
+        where date >= '2019-01-01' and symbol = 'AMZN' and trader = 'charles'
         order by symbol, date;          
         
             //ansi sql; comments for queryable metadata and data catalog
@@ -102,20 +109,20 @@ What we will see
         //free stock_history from Data Marketplace
         //Factset / S&P: Instant access to entire catalog (Terabytes in seconds)
         select * 
-        from stock_history
+        from zepl_us_stocks_daily.public.stock_history
         where symbol = 'SBUX'
         order by date desc;
         
-    //stock_latest - free real-time stock quotes with zero maintenance
-        select top 100 s.*
-        from stock_latest s
-        inner join watchlist w on s.symbol = w.symbol
-        order by 1;
 
 
 
-    //we are done, resize compute down to save costs
-        alter warehouse finservam_devops_wh set warehouse_size = 'small';
+
+
+
+
+
+    //we are done, we can wait for auto-suspend or suspend on demand to save credits
+        alter warehouse finservam_devops_wh suspend;
 
 
 
@@ -128,6 +135,3 @@ What we will see
     Use Window Functions to automate cash, position, and PnL reporting - get started quickly with this code
 
 */
-
-
-
