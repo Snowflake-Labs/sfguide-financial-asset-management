@@ -73,6 +73,11 @@ REFERENCE
         alter warehouse finservam_devops_wh set warehouse_size = 'xsmall';
 
 
-    -----------------------------------------------------
-    --test scripting in other window
-        select top 300 * from trade2 order by 1 desc;
+    --readers don't block writers
+      select date, count(*) cnt
+      from trade2
+      group by 1
+      order by 1 desc;
+
+      select top 300 * 
+      from trade2 order by 1 desc;
