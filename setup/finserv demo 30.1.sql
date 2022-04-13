@@ -2,14 +2,15 @@
 Run "finserv demo 30.1" to setup 'SNOWFLAKE_SAMPLE_DATA' if it does not exist
 
 If running the script: finserv demo 30 DDL
-the error is produced: "Database 'SNOWFLAKE_SAMPLE_DATA' does not exist"
+produces a missing database error like: 
+"Database 'SNOWFLAKE_SAMPLE_DATA' does not exist"
 
-You will need to run this script as described in: https://docs.google.com/document/d/1zy5J5PfjJ82vcX0exFEnaq5FN_hs0G8e64zB5BpFC3I/edit
+You will need to run this script:"finserv demo 30.1.sql" as described in: https://docs.snowflake.com/en/user-guide/sample-data-using.html
 
 */
 
 -----------------------------------------------------
---set context and size up compute
+--set context 
 
 
 -- Execute this worksheet as AccountAdmin
