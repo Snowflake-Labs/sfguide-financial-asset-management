@@ -1,50 +1,49 @@
 # Financial Services Asset Management on Snowflake Demo
 
-## Why this Demo
-### Problem Statement
+### Problem
 Asset managers have spent hundreds of millions on systems to accurately give a Single Version of Truth (SVOT) in real-time.  What would such a system look like on Snowflake?
 
-### Why Snowflake: Your benefits
-    Significantly less cost of maintaining one high performance SVOT    
-    SVOT makes trading, risk management, and regulatory reporting significantly easier
+### Solution
+    Snowflake has high performance at low TCO due to its turn-key operation and near-zero maintenance
+    SVOT makes trading, risk management, regulatory reporting, and Financial Services big data use cases significantly easier
     Unlimited Compute and Concurrency enable quick data-driven decisions
 
 ### What we will see
-    Use Data Marketplace to instantly get stock history so the business doesn't have to wait for IT.
+    Use the Snowflake Data Marketplace to instantly get stock history so the business doesn't have to wait for IT.
     Populate only the trade table and use window functions to generate cash, positions, and Profit-and-Loss (PnL) so that you can have real-time updates.
-    Use SnowSight - Snowflake's complimentary User Interface (UI) - to generate dashboards that can be shared with the business so that you don't need licenses for an additional Business Intelligence (BI) tool.
+    Use SnowSight - Snowflake's complimentary User Interface (UI) - to generate dashboards that can be shared with the business.
 
 ## Demo and Technical Deep-Dive
 [Youtube Playlist](https://www.youtube.com/playlist?list=PLyKI7j42vSkbryDXuB7kEhzk66lmdNJ3Z)
 
 [Medium Blog](https://allenwongtech.medium.com/what-would-snowflake-for-an-asset-manager-look-like-part-1-a0583c0e5822)
 
-## How to Install (Only takes about 5 minutes to execute)
+## How to Install (Takes under 7 minutes; each script is idempotent)
+![Create a database from share named snowflake_sample_data](https://raw.githubusercontent.com/Snowflake-Labs/sfguide-financial-asset-management/master/snowflake_sample_data.jpg)
+
+    Create a database named snowflake_sample_data from the sample_data share [see above pic]
+    Find a share named "Zepl" from the Snowflake Data Marketplace and create the database named ZEPL_US_STOCKS_DAILY
+    
     Run Script 10: Sets up the environment
     Run Script 20: Connects to the Data Marketplace to get free stock history
     Run Script 30: Populates the trade table.  Creates Window Function Views for cash, positions, and PnL
-    
-### Optional Setting:
-In the first few lines of script 30, you can set the variable *limit_trader = x*.
+    Run Script 40: This is the smoke test and what the business queries
 
-It's default is set to 1000 traders to populate in the trader table which when multplied by ten years of daily trades will create 2.1 billion trades.  So you can create 6 billion or more trades for stress-testing and this is the relationship:
-    
-limit_trader  | Trades generated | Script 30 Run-time with xxlarge compute
---------------|------------------|------------------------------
-1000 (default)| 2.1 billion      | 1:45 (1 minute  : 45 seconds)
-2000          | 4.2 billion      | 3:00 (3 minutes)
-3000          | 6.4 billion      | 4:40 (4 minutes : 40 seconds)
-    
-## How to Demo
-    Run script 40: Show the use case, benefits, and sample queries 
-
-## How to Demo SnowSight
+## How to Setup SnowSight Demo:
     In snowsight subfolder:
         Add filters in script "33 filter SnowSight"
         Build SnowSight dashboard using script "35 SnowSight".
     
-## Optional Demo
-    Run script 50: Stress-test queries via Window Functions on all data (shows scaling up to XLarge compute)
+### Optional Setting:
+In the first few lines of script 30, you can set the variable *limit_trader = x*.
+
+It's default is set to 1000 traders to populate in the trader table which when multplied by ten years of daily trades will create 2.4 billion trades.  So you can create 6 billion or more trades for stress-testing and this is the relationship:
+    
+limit_trader  | Trades generated | Script 30 Run-time with xxlarge compute
+--------------|------------------|------------------------------
+1000 (default)| 2.4 billion      | 1:45 (1 minute  : 45 seconds)
+2000          | 4.8 billion      | 3:00 (3 minutes)
+3000          | 7.2 billion      | 4:40 (4 minutes : 40 seconds)
     
 ## Partner Demos on top of this demo
 
