@@ -14,10 +14,12 @@ What we will see
     
 */
 
+
+
 -----------------------------------------------------
 --context
     use role finservam_admin; use warehouse finservam_devops_wh; use schema finservam.public;
-    
+    show warehouses like 'finservam%';
     //if desired, resize compute - we start low to save money
     alter warehouse finservam_devops_wh set warehouse_size = 'xsmall';
 
@@ -40,21 +42,15 @@ What we will see
 
 
 
-
-
     //what is the current PnL for trader charles? - view on trade table so always updated as trade populated
-        //notice it is a non-materialized window function view on 2 billion rows
-        select
-            symbol, date, trader, PM, 
-            to_varchar(cash_now::numeric(36,2), '999,999,999,999.00') cash_now, 
-            to_varchar(num_share_now, '999,999,999,999') num_share_now,
-            to_varchar(close::numeric(36,2), '999,999,999,999.00') close, 
-            to_varchar(market_value::numeric(36,2), '999,999,999,999.00') market_value, 
-            to_varchar(PnL::numeric(36,2), '999,999,999,999.00') PnL
+        //notice it is a non-materialized window function view on 2.5 billion rows
+        select symbol, trader, PM, num_share_now, cash_now, close, date, PnL
         from position_now where trader = 'charles'
         order by PnL desc;
         
-                
+        
+
+
         
     //see ranked PnL for a random trader - no indexes, statistics, vacuuming, maintenance
         set trader = (select top 1 trader from trader sample(10) where trader is not null);
@@ -66,12 +62,14 @@ What we will see
         
         
 
-        
+
         
         
 
+
     //what is my position and PnL as-of a date?  
         //notice 24 hour global cache on 2nd execution
+        //alter session set use_cached_result=false;  //disable global cache
         select symbol, date, trader, cash_cumulative, num_shares_cumulative, close, market_value, PnL
         from position where date >= '2019-01-01' and symbol = 'AMZN' and trader = 'charles'
         order by date;
@@ -102,6 +100,14 @@ What we will see
 
 
 
+//Cross-Database Joins 
+    select sl.symbol, sl.date, sl.close, cp.exchange, cp.website, cp.description
+    from finservam.public.stock_latest sl
+    inner join zepl_us_stocks_daily.public.company_profile cp on sl.symbol = cp.symbol
+    where sl.symbol = 'AMZN'
+    order by 1;
+
+
 
 
 
@@ -117,21 +123,8 @@ What we will see
 
 
 
-
-
-
-
     //we are done, we can wait for auto-suspend or suspend on demand to save credits
+        show warehouses like 'finservam%';
         alter warehouse finservam_devops_wh suspend;
 
 
-
-
-
-
-/*Recap what we saw & benefits
-    Use Data Marketplace to instantly get stock history - no more waiting, ETL pain 
-    Query trade, cash, positions, and PnL on Snowflake - support your business logic
-    Use Window Functions to automate cash, position, and PnL reporting - get started quickly with this code
-
-*/
