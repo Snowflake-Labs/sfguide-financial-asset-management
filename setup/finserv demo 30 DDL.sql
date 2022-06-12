@@ -4,7 +4,7 @@ Run "script 30" to setup DDL
 size up to a xxlarge so this script can complete in 5 minutes with 1000 traders; then turn off compute
 create traders table using limit_trader parameter defaulted at 1000 traders
 create watchlist table which authorizes which stocks are eligible for trading
-populate 2 billion synthentic trades
+populate 2.5 billion synthentic trades
 create window-function views for position
 
 
@@ -15,7 +15,8 @@ create window-function views for position
     use role finservam_admin; use warehouse finservam_datascience_wh; use schema finservam.public;
 
     --size up since we are generating many trades 
-    alter warehouse finservam_datascience_wh set warehouse_size = 'xxlarge';
+    --wait_for_completion can be a best practice for larger size warehouses
+    alter warehouse finservam_datascience_wh set warehouse_size = 'xxlarge' wait_for_completion = TRUE;
 
 -----------------------------------------------------
 --OPTION: Set number of traders to be used
@@ -78,8 +79,29 @@ commit;
 
 
 
+-----------------------------------------------------
+--we update a trader's name to "lab" and their PM to "warren" for a Data Governance demo
+--last_query_id and result_scan lets us manipulate the resultset of a previous query
+    
+    select pm, count(*) cnt
+    from trader
+    group by pm
+    having count(*) > 2
+    order by 2, 1
+    limit 1;
 
+    set q = last_query_id(); 
 
+    update trader set trader = 'lab', PM = 'warren' where trader in
+    (
+        select trader
+        from trader t
+        inner join (
+          select pm from table(result_scan($q))
+        ) pm on t.pm = pm.pm
+        order by trader
+        limit 1
+    );
 
       
 ----------------------------------------------------------------------------------------------------------
@@ -195,9 +217,13 @@ commit;
             select 'charles' trader, 'warren' PM, 2000000 buying_power;
       commit;
 
-
+        //we can create comments on view columns
         -----------------------------------------------------
-          create or replace view public.position 
+          create or replace view public.position
+          (
+              symbol, exchange, date, trader, pm, num_shares_cumulative, cash_cumulative, close, market_value,
+              PnL comment 'Profit and Loss: Demonstrate comment on view column'
+          )
             comment = 'what assets owned; demo Window Function running sum'
           as
           with cte as
@@ -241,7 +267,11 @@ commit;
           
         -----------------------------------------------------
         --position_now
-        create or replace view position_now 
+        create or replace view position_now        
+        (
+        symbol, exchange, trader, pm, num_share_now, cash_now, close, date, market_value,
+        PnL comment 'Profit and Loss: Demonstrate comment on view column'
+        )
             comment = 'current market price to show value now'
         as
         select p.*, l.close, l.date,
@@ -249,28 +279,12 @@ commit;
             (num_share_now * close) + cash_now as PnL
         from middleware.share_now p
         left outer join stock_latest l on p.symbol = l.symbol;
-        
-
 
 ----------------------------------------------------------------------------------------------------------
 --size down to save money
   
-        alter warehouse finservam_datascience_wh set warehouse_size = 'small';
+        alter warehouse finservam_datascience_wh set warehouse_size = 'xsmall';
         
         //option to shutdown
         alter warehouse finservam_datascience_wh suspend;
 
-
-
-
-
-/*
-Recap
-
-size up to a xxlarge so this script can complete in 5 minutes with 1000 traders; then turn off compute
-create traders table using limit_trader parameter defaulted at 1000 traders
-create watchlist table which authorizes which stocks are eligible for trading
-populate 2 billion synthentic trades
-create window-function views for position
-
-*/
