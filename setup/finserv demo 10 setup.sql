@@ -20,11 +20,11 @@ What we will see
 
     //Create compute
     create warehouse if not exists finservam_devops_wh
-        with warehouse_size = 'xsmall' auto_suspend = 300 initially_suspended = true comment = 'Financial Services DevOps Compute';
+        with warehouse_size = 'xsmall' auto_suspend = 120 initially_suspended = true comment = 'Financial Services DevOps Compute';
     create warehouse if not exists finservam_datascience_wh
-        with warehouse_size = 'xsmall' auto_suspend = 300 initially_suspended = true comment = 'DataScience will often scale to extremes';
+        with warehouse_size = 'xsmall' auto_suspend = 60 initially_suspended = true comment = 'DataScience will often scale to extremes';
     create warehouse if not exists xsmall_const_wh
-        with warehouse_size = 'xsmall' auto_suspend = 1 initially_suspended = true comment = 'Constant so should always be XS and not resized';
+        with warehouse_size = 'xsmall' auto_suspend = 60 initially_suspended = true comment = 'Constant so should always be XS and not resized';
         
         
         
@@ -69,14 +69,5 @@ What we will see
         create schema if not exists zepl_writeback comment = 'Optional: For Zepl - Zeppelin Data Science Notebook - writeback';
 
     use schema finservam.public;
-    
 
-/*
-Recap
 
-Setup the objects needed:
-    roles (Role Based Access Control RBAC)
-    warehouses (isolated and instant compute)
-    database finservam
-    all objects owned by finservam_admin role
-*/

@@ -18,28 +18,36 @@ On Database Objects to your left, Click "Refresh Now" and see the Zepl share
 
 */
 
---double-check permissions have been granted if forgotten in step above
-use role accountadmin;
-    grant imported privileges on database zepl_us_stocks_daily to role finservam_admin;
-
 -----------------------------------------------------
---smoke test
-    use role finservam_admin;
+--setup
+    use role accountadmin;
     use warehouse finservam_devops_wh;
-    use schema finservam.public;
-    
+
+/*
+--create database from marketplace share
+    set acct_name = 'ZEPL';
+    set share_name = 'US_STOCKS_DAILY';
+    set share = $acct_name || '.' || $share_name;
+
+    create or replace database ZEPL_US_STOCKS_DAILY from share identifier($share);
+    grant imported privileges on database ZEPL_US_STOCKS_DAILY to role finservam_admin;
+*/
+
+--Test Driven Development: Verify Data Marketplace Share; Instructions are in topmost comments
+    select top 1 *
+    from zepl_us_stocks_daily.public.stock_history;
+
+
+--Test Driven Development: Verify snowflake_sample_data share; Instructions are here:
+--https://github.com/Snowflake-Labs/sfguide-financial-asset-management#how-to-install-takes-under-7-minutes-each-script-is-idempotent
+    select top 1 *
+    from snowflake_sample_data.tpcds_sf10tcl.customer;
+
+
+--Size up compute
     alter warehouse finservam_devops_wh set warehouse_size = 'medium';
-
-    //Verify Data Marketplace: Instant Updates
-    select top 300 * 
-    from "ZEPL_US_STOCKS_DAILY"."PUBLIC"."STOCK_HISTORY" 
-    where symbol in ('AAPL') order by date desc;
-    
-    
-
-
-
-
+    use role finservam_admin;
+    use schema finservam.public;
 
 ----------------------------------------------------------------------------------------------------------
 --Market Data Objects
@@ -95,14 +103,6 @@ use role accountadmin;
 
 -----------------------------------------------------
 --suspend Virtual Warehouse to save credits
+    alter warehouse finservam_devops_wh set warehouse_size = 'xsmall';
     alter warehouse finservam_devops_wh suspend;
 
-
-/*
-Recap
-
-Use a free share from the Data Marketplace to get stock price history
-Data Governance via RBAC by adding finservam_admin as role that can access data
-Data Quality Check by ensuring no duplicates
-
-*/
