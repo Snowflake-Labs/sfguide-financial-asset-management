@@ -4,12 +4,12 @@ This demo answers the question:
 
 Why Snowflake: Your benefits
     Significantly less cost of maintaining one high performance SVOT    
-    SVOT makes trading, risk management, and regulatory reporting significantly easier
+    SVOT makes trading, risk management, regulatory reporting, and all use cases significantly easier
     Unlimited Compute and Concurrency enable quick data-driven decisions
 
 What we will see
     Use Data Marketplace to instantly get stock history
-    Query trade, cash, positions, and PnL on Snowflake
+    Query trade, cash, positions, and PnL on 2 billion or more rows on Snowflake
     Use Window Functions to automate cash, position, and PnL reporting
     
 */
@@ -19,7 +19,7 @@ What we will see
 -----------------------------------------------------
 --context
     use role finservam_admin; use warehouse finservam_devops_wh; use schema finservam.public;
-    show warehouses like 'finservam%';
+    
     //if desired, resize compute - we start low to save money
     alter warehouse finservam_devops_wh set warehouse_size = 'xsmall';
 
@@ -30,7 +30,7 @@ What we will see
 -----------------------------------------------------
 --View, table, and column comments for a data dictionary
 
-    select table_type object_type, table_name object_name, comment
+    select table_type object_type, table_name object_name, comment /* JSON */
     from information_schema.tables
     where table_schema = 'PUBLIC' and comment is not null
         union all
@@ -43,14 +43,18 @@ What we will see
 
 
     //what is the current PnL for trader charles? - view on trade table so always updated as trade populated
-        //notice it is a non-materialized window function view on 2.5 billion rows
-        select symbol, trader, PM, num_share_now, cash_now, close, date, PnL
+        //notice it is a non-materialized window function view on 2 billion rows
+        select
+            symbol, date, trader, PM, 
+            to_varchar(cash_now::numeric(36,2), '999,999,999,999.00') cash_now, 
+            to_varchar(num_share_now, '999,999,999,999') num_share_now,
+            to_varchar(close::numeric(36,2), '999,999,999,999.00') close, 
+            to_varchar(market_value::numeric(36,2), '999,999,999,999.00') market_value, 
+            to_varchar(PnL::numeric(36,2), '999,999,999,999.00') PnL
         from position_now where trader = 'charles'
         order by PnL desc;
         
-        
-
-
+                
         
     //see ranked PnL for a random trader - no indexes, statistics, vacuuming, maintenance
         set trader = (select top 1 trader from trader sample(10) where trader is not null);
@@ -62,26 +66,21 @@ What we will see
         
         
 
-
-        
-        
+    //option to disable cache
+    alter user set use_cached_result=false;  
+    alter user set use_cached_result=true; 
 
 
     //what is my position and PnL as-of a date?  
         //notice 24 hour global cache on 2nd execution
-        //alter session set use_cached_result=false;  //disable global cache
         select symbol, date, trader, cash_cumulative, num_shares_cumulative, close, market_value, PnL
         from position where date >= '2019-01-01' and symbol = 'AMZN' and trader = 'charles'
         order by date;
         
 
-
           //dynamic view using window functions so only pay storage for trade table; trade table drives all
               select get_ddl('view','position');   
               
-
-
-
 
 
 
@@ -99,21 +98,18 @@ What we will see
 
 
 
-
 //Cross-Database Joins 
     select sl.symbol, sl.date, sl.close, cp.exchange, cp.website, cp.description
     from finservam.public.stock_latest sl
     inner join zepl_us_stocks_daily.public.company_profile cp on sl.symbol = cp.symbol
-    where sl.symbol = 'AMZN'
-    order by 1;
+    where sl.symbol = 'AMZN';
 
 
 
 
 
-//Instant Real-Time Market Data
-        //free stock_history from Data Marketplace
-        //Factset / S&P: Instant access to entire catalog (Terabytes in seconds)
+//Instant Real-Time Market Data with neither copying nor FTP
+        //Query terabytes immediately
         select * 
         from zepl_us_stocks_daily.public.stock_history
         where symbol = 'SBUX'
@@ -123,8 +119,62 @@ What we will see
 
 
 
-    //we are done, we can wait for auto-suspend or suspend on demand to save credits
-        show warehouses like 'finservam%';
-        alter warehouse finservam_devops_wh suspend;
 
+
+----------------------------------------------------------------------------------------------------------
+--Zero Copy Clone for instant dev,qa,sandboxes
+use role accountadmin;
+drop database if exists finservam_qa1;
+create or replace database finservam_qa1 clone finservam;
+
+
+
+//Clones are zero additional storage cost; storage cost is only on deltas; 
+//ie 1 TB in prod; change .1 TB in clone only pay for 1.1 automatically compressed TB
+  select *
+  from finservam.public.trade 
+  where trader = 'charles' and symbol = 'AMZN';
+
+  //we can change clones without impacting production
+  select * --delete
+  from finservam_qa1.public.trade 
+  where trader = 'charles' and symbol = 'AMZN';
+  
+  //we use Time Travel for DevOps & Rollbacks [configurable from 0-90 days]
+    set queryID = last_query_id(); 
+  
+  
+  //we can also set the queryID
+      //set queryID = '01a61bc3-0504-9531-0000-7335021bd556';
+
+
+
+  //we Time Travel to see before the (DML) delete
+  select *
+  from finservam_qa1.public.trade 
+  before (statement => $queryid)
+  where trader = 'charles' and symbol = 'AMZN';
+  
+  
+  -----------------------------------------------------
+  --UNDO our delete
+  insert into finservam_qa1.public.trade 
+  select *
+  from finservam_qa1.public.trade 
+  before (statement => $queryid)
+  where trader = 'charles' and symbol = 'AMZN';
+  
+  
+  -----------------------------------------------------
+  --Undrop is also up to 90 days of Time Travel; DBAs and Release Managers sleep much better than backup & restore
+  drop table finservam_qa1.public.trade;
+  select count(*) from finservam_qa1.public.trade;
+  undrop table finservam_qa1.public.trade;
+  
+
+
+
+
+  //if we don't want to wait for auto-suspend
+    alter warehouse finservam_devops_wh suspend;
 
