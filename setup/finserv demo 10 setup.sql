@@ -62,12 +62,6 @@ What we will see
     use schema finservam.public;
     create schema if not exists middleware comment = 'for interim objects that are not really meant for end users';
         
-        //Optional: Allow Sigma Computing to write data to Snowflake 
-        create schema if not exists sigma_writeback comment = 'Optional: For Sigma BI tool writeback';
-
-        //Optional: Allow Zepl to write data to Snowflake
-        create schema if not exists zepl_writeback comment = 'Optional: For Zepl - Zeppelin Data Science Notebook - writeback';
-
     use schema finservam.public;
 
 
