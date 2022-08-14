@@ -15,14 +15,14 @@ https://github.com/Snowflake-Labs/sfguide-financial-asset-management/tree/master
     -----------------------------------------------------
     --clone
     create or replace database fs_hol_prod clone finservam;
-    grant all privileges on database fs_hol_prod to role fs_hol_rl;
+    grant all privileges on database fs_hol_prod to role public;
     
-    grant usage on schema fs_hol_prod.public to role fs_hol_rl;
-    grant usage on schema fs_hol_prod.middleware to role fs_hol_rl;
+    grant usage on schema fs_hol_prod.public to role public;
+    grant usage on schema fs_hol_prod.middleware to role public;
     
-    grant select on all tables in schema fs_hol_prod.public to role fs_hol_rl;
-    grant select on all views in schema fs_hol_prod.public to role fs_hol_rl;
-    grant select on all views in schema fs_hol_prod.middleware to role fs_hol_rl;
+    grant select on all tables in schema fs_hol_prod.public to role public;
+    grant select on all views in schema fs_hol_prod.public to role public;
+    grant select on all views in schema fs_hol_prod.middleware to role public;
 
 
 
@@ -88,3 +88,17 @@ show grants to user fs_hol_user2;
 create database fs_hol2 clone fs_hol1;
 grant usage on database fs_hol2 to role fs_hol_rl;
 
+
+-----------------------------------------------------
+--
+
+    grant all privileges on database fs_hol2 to role fs_hol_rl2;
+
+    grant ownership on schema fs_hol2.public to role fs_hol_rl2;
+    grant ownership on schema fs_hol2.middleware to role fs_hol_rl2;
+    
+    grant ownership on all tables in schema fs_hol2.public to role fs_hol_rl2 copy current grants;
+    grant ownership on all views in schema fs_hol2.public to role fs_hol_rl2 copy current grants;
+    grant ownership on all views in schema fs_hol2.middleware to role fs_hol_rl2 copy current grants;
+
+    grant monitor, operate, usage on warehouse fs_hol_xsmall to role fs_hol_rl2;
