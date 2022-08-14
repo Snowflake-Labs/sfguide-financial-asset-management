@@ -10,9 +10,9 @@ To Find & Replace in Snowsight:
 
 -----------------------------------------------------
 --context
-    use role fs_hol_rl;
-    use secondary roles all;
-    use role fs_hol_rl999; use warehouse fs_hol_xsmall; use schema fs_hol_prod.public;
+    -- use role fs_hol_rl;
+    -- use secondary roles all;
+    use role fs_hol_rl2; use warehouse fs_hol_xsmall; use schema fs_hol_prod.public;
     
 
 
@@ -111,7 +111,7 @@ To Find & Replace in Snowsight:
   where trader = 'charles' and symbol = 'AMZN';
 
   delete
-  from fs_hol_prod.public.trade 
+  from fs_hol2.public.trade 
   where trader = 'charles' and symbol = 'AMZN';
 
 //we use Time Travel for DevOps & Rollbacks [configurable from 0-90 days]
@@ -123,7 +123,7 @@ To Find & Replace in Snowsight:
   
   //verify the records are gone
   select *
-  from fs_hol_rl999.public.trade 
+  from fs_hol_2.public.trade 
   where trader = 'charles' and symbol = 'AMZN';
   
   
@@ -134,7 +134,7 @@ To Find & Replace in Snowsight:
 
   //but we can use Time Travel to see before the (DML) delete
   select *
-  from fs_hol_rl999.public.trade 
+  from fs_hol_rl2.public.trade 
   before (statement => $queryid)
   where trader = 'charles' and symbol = 'AMZN';
   
@@ -143,7 +143,7 @@ To Find & Replace in Snowsight:
   --UNDO our delete
   insert into fs_hol1.public.trade 
   select *
-  from fs_hol_rl999.public.trade 
+  from fs_hol_rl2.public.trade 
   before (statement => $queryid)
   where trader = 'charles' and symbol = 'AMZN';
 
@@ -153,17 +153,16 @@ To Find & Replace in Snowsight:
           select 'dev', count(*) from fs_hol1.public.trade where trader = 'charles' and symbol = 'AMZN';
 
           select *
-          from fs_hol_rl999.public.trade 
+          from fs_hol_rl2.public.trade 
           where trader = 'charles' and symbol = 'AMZN';
 
   -----------------------------------------------------
   --Undrop is also up to 90 days of Time Travel; DBAs and Release Managers sleep much better than backup & restore
   drop table fs_hol1.public.trade;
-  select count(*) from fs_hol_rl999.public.trade;
+  select count(*) from fs_hol_rl2.public.trade;
   undrop table fs_hol1.public.trade;
   
   //verify undrop
   select top 10 *
-  from fs_hol_rl999.public.trade;
-
+  from fs_hol_rl2.public.trade;
 
