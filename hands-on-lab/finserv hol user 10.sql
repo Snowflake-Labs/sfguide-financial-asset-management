@@ -123,8 +123,10 @@ To Find & Replace in Snowsight:
   
   //verify the records are gone
   select *
-  from fs_hol_2.public.trade 
+  from fs_hol2.public.trade 
   where trader = 'charles' and symbol = 'AMZN';
+  
+  
   
   
                   //we can also see and set the queryID via: Home | Activity | Query History
@@ -134,35 +136,38 @@ To Find & Replace in Snowsight:
 
   //but we can use Time Travel to see before the (DML) delete
   select *
-  from fs_hol_rl2.public.trade 
+  from fs_hol2.public.trade 
   before (statement => $queryid)
   where trader = 'charles' and symbol = 'AMZN';
   
   
   -----------------------------------------------------
   --UNDO our delete
-  insert into fs_hol1.public.trade 
+  insert into fs_hol2.public.trade 
   select *
-  from fs_hol_rl2.public.trade 
+  from fs_hol2.public.trade 
   before (statement => $queryid)
   where trader = 'charles' and symbol = 'AMZN';
 
 //verify same as before
           select 'prod' env, count(*) cnt from fs_hol_prod.public.trade where trader = 'charles' and symbol = 'AMZN'
               union all
-          select 'dev', count(*) from fs_hol1.public.trade where trader = 'charles' and symbol = 'AMZN';
+          select 'dev', count(*) from fs_hol2.public.trade where trader = 'charles' and symbol = 'AMZN';
 
           select *
-          from fs_hol_rl2.public.trade 
+          from fs_hol2.public.trade 
           where trader = 'charles' and symbol = 'AMZN';
 
   -----------------------------------------------------
   --Undrop is also up to 90 days of Time Travel; DBAs and Release Managers sleep much better than backup & restore
-  drop table fs_hol1.public.trade;
-  select count(*) from fs_hol_rl2.public.trade;
-  undrop table fs_hol1.public.trade;
+  drop table fs_hol2.public.trade;
+
+  //this will fail until you undrop the table
+  select count(*) from fs_hol2.public.trade;
+  undrop table fs_hol2.public.trade;
   
   //verify undrop
+  select count(*) from fs_hol2.public.trade;
+  
   select top 10 *
-  from fs_hol_rl2.public.trade;
-
+  from fs_hol2.public.trade;
