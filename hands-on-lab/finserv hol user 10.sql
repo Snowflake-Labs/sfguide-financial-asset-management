@@ -157,7 +157,7 @@ INSTRUCTIONS
 //verify same as before
           select 'prod' env, count(*) cnt from fs_hol_prod.public.trade where trader = 'charles' and symbol = 'AMZN'
               union all
-          select 'dev', count(*) from fs_hol2.public.trade where trader = 'charles' and symbol = 'AMZN';
+          select 'dev', count(*) from fs_hol30.public.trade where trader = 'charles' and symbol = 'AMZN';
 
           select *
           from fs_hol999.public.trade 
