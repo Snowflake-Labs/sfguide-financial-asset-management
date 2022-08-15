@@ -1,9 +1,14 @@
 /*
 Financial Services Hand-On-Labs (HOL) for User
 
-To Find & Replace in Snowsight:
+INSTRUCTIONS
+
+1. Find & Replace in Snowsight or the text editor of your choice:
     for mac cmd-shift-h
     for windows ctrl-shift-h
+2. Replace 999 with the UserID you were assigned ie 1-30.
+
+
 */
 
 
