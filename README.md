@@ -22,7 +22,7 @@ Asset managers have spent hundreds of millions on systems to accurately give a S
 ![Create a database from share named snowflake_sample_data](https://raw.githubusercontent.com/Snowflake-Labs/sfguide-financial-asset-management/master/snowflake_sample_data.jpg)
 
     Create a database named snowflake_sample_data from the sample_data share [see above pic]
-    Find a share named "Zepl" from the Snowflake Data Marketplace and create the database named ZEPL_US_STOCKS_DAILY
+    Find a share named "Zepl" from the Snowflake Data Marketplace and name the database ZEPL_US_STOCKS_DAILY
     
     Run Script 10: Sets up the environment
     Run Script 20: Connects to the Data Marketplace to get free stock history
