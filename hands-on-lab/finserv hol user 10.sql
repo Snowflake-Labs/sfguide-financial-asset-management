@@ -6,7 +6,7 @@ INSTRUCTIONS
 1. Find & Replace in Snowsight or the text editor of your choice:
     for mac cmd-shift-h
     for windows ctrl-shift-h
-2. Replace 999 with the UserID you were assigned ie 1-30.
+2. Replace all occurences 999 with the UserID you were assigned ie 1-30.
 
 
 */
@@ -25,11 +25,11 @@ INSTRUCTIONS
 --View, table, and column comments for a data dictionary
 
     select table_type object_type, table_name object_name, comment /* JSON */
-    from information_schema.tables
+    from fs_hol_prod.information_schema.tables
     where table_schema = 'PUBLIC' and comment is not null
         union all
     select 'COLUMN' object_type, table_name || '.' || column_name object_type, comment
-    from information_schema.columns
+    from fs_hol_prod.information_schema.columns
     where table_schema = 'PUBLIC' and comment is not null
     order by 1,2;
 
@@ -39,16 +39,16 @@ INSTRUCTIONS
     //what is the current PnL for trader charles? - view on trade table so always updated as trade populated
         //notice it is a non-materialized window function view on 2 billion rows
         select *
-        from position_now where trader = 'charles'
+        from fs_hol_prod.public.position_now where trader = 'charles'
         order by PnL desc;
         
                 
         
     //see ranked PnL for a random trader - no indexes, statistics, vacuuming, maintenance
-        set trader = (select top 1 trader from trader sample(10) where trader is not null);
+        set trader = (select top 1 trader from fs_hol_prod.public.trader sample(10) where trader is not null);
 
         select symbol, date, trader, PM, cash_now, num_share_now, close, market_value, PnL
-        from position_now
+        from fs_hol_prod.public.position_now
         where trader = $trader
         order by PnL desc;
         
@@ -57,25 +57,29 @@ INSTRUCTIONS
     //what is my position and PnL as-of a date?  
         //notice 24 hour global cache on 2nd execution
         select symbol, date, trader, cash_cumulative, num_shares_cumulative, close, market_value, PnL
-        from position where date >= '2019-01-01' and symbol = 'AMZN' and trader = 'charles'
+        from fs_hol_prod.public.position where date >= '2019-01-01' and symbol = 'AMZN' and trader = 'charles'
         order by date;
         
 
           //dynamic view using window functions so only pay storage for trade table; trade table drives all
-              select get_ddl('view','position');   
+              select get_ddl('view','fs_hol_prod.public.position');   
               
 
 
 
 
     //trade - date and quantity of buy, sell, or hold action on assets: This controls the position view
+        select count(*) from fs_hol_prod.public.trade;
+        
         select * 
-        from trade 
+        from fs_hol_prod.public.trade 
         where date >= '2019-01-01' and symbol = 'AMZN' and trader = 'charles'
         order by symbol, date;          
         
             //ansi sql; comments for queryable metadata and data catalog
-                select get_ddl('table','trade');   
+                select get_ddl('table','fs_hol_prod.public.trade');   
+        
+
 
 
 
@@ -119,9 +123,7 @@ INSTRUCTIONS
   from fs_hol999.public.trade 
   where trader = 'charles' and symbol = 'AMZN';
 
-//we use Time Travel for DevOps & Rollbacks [configurable from 0-90 days]
-
-  //set a parameter
+  //we use Time Travel for DevOps & Rollbacks [configurable from 0-90 days]
   set queryID = last_query_id(); 
   
   select $queryID;
@@ -148,7 +150,7 @@ INSTRUCTIONS
   
   -----------------------------------------------------
   --UNDO our delete
-  insert into fs_hol999.public.trade 
+  insert into fs_hol1.public.trade 
   select *
   from fs_hol999.public.trade 
   before (statement => $queryid)
@@ -157,22 +159,22 @@ INSTRUCTIONS
 //verify same as before
           select 'prod' env, count(*) cnt from fs_hol_prod.public.trade where trader = 'charles' and symbol = 'AMZN'
               union all
-          select 'dev', count(*) from fs_hol30.public.trade where trader = 'charles' and symbol = 'AMZN';
+          select 'dev', count(*) from fs_hol999.public.trade where trader = 'charles' and symbol = 'AMZN';
 
           select *
           from fs_hol999.public.trade 
           where trader = 'charles' and symbol = 'AMZN';
 
-/*
---Uncomment this section to test undrop table
 
+--Uncomment this section to test undrop table
+/*
   -----------------------------------------------------
   --Undrop is also up to 90 days of Time Travel; DBAs and Release Managers sleep much better than backup & restore
   drop table fs_hol999.public.trade;
 
   //this will fail until you undrop the table
-  select count(*) from fs_hol2.public.trade;
-  undrop table fs_hol2.public.trade;
+  select count(*) from fs_hol1.public.trade;
+  undrop table fs_hol999.public.trade;
   
   //verify undrop
   select count(*) from fs_hol999.public.trade;
