@@ -106,38 +106,38 @@ create role fs_hol_rl30; grant role fs_hol_rl30 to role finservam_admin;
 
 -----------------------------------------------------
 --user
---CHANGE THE PASSWORD - SURROUNDED BY SINGLE QUOTES - AND SHARE WITH YOUR USERS
+--THIS WILL INTENTIONALLY BREAK UNTIL YOU FIND & REPLACE "password = ,"
 
-create user fs_hol_user1 password = CHANGEME, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl1;
-create user fs_hol_user2 password = CHANGEME, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl2;
-create user fs_hol_user3 password = CHANGEME, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl3;
-create user fs_hol_user4 password = CHANGEME, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl4;
-create user fs_hol_user5 password = CHANGEME, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl5;
-create user fs_hol_user6 password = CHANGEME, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl6;
-create user fs_hol_user7 password = CHANGEME, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl7;
-create user fs_hol_user8 password = CHANGEME, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl8;
-create user fs_hol_user9 password = CHANGEME, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl9;
-create user fs_hol_user10 password = CHANGEME, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl10;
-create user fs_hol_user11 password = CHANGEME, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl11;
-create user fs_hol_user12 password = CHANGEME, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl12;
-create user fs_hol_user13 password = CHANGEME, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl13;
-create user fs_hol_user14 password = CHANGEME, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl14;
-create user fs_hol_user15 password = CHANGEME, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl15;
-create user fs_hol_user16 password = CHANGEME, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl16;
-create user fs_hol_user17 password = CHANGEME, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl17;
-create user fs_hol_user18 password = CHANGEME, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl18;
-create user fs_hol_user19 password = CHANGEME, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl19;
-create user fs_hol_user20 password = CHANGEME, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl20;
-create user fs_hol_user21 password = CHANGEME, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl21;
-create user fs_hol_user22 password = CHANGEME, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl22;
-create user fs_hol_user23 password = CHANGEME, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl23;
-create user fs_hol_user24 password = CHANGEME, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl24;
-create user fs_hol_user25 password = CHANGEME, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl25;
-create user fs_hol_user26 password = CHANGEME, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl26;
-create user fs_hol_user27 password = CHANGEME, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl27;
-create user fs_hol_user28 password = CHANGEME, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl28;
-create user fs_hol_user29 password = CHANGEME, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl29;
-create user fs_hol_user30 password = CHANGEME, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl30;
+create user fs_hol_user1 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl1;
+create user fs_hol_user2 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl2;
+create user fs_hol_user3 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl3;
+create user fs_hol_user4 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl4;
+create user fs_hol_user5 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl5;
+create user fs_hol_user6 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl6;
+create user fs_hol_user7 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl7;
+create user fs_hol_user8 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl8;
+create user fs_hol_user9 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl9;
+create user fs_hol_user10 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl10;
+create user fs_hol_user11 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl11;
+create user fs_hol_user12 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl12;
+create user fs_hol_user13 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl13;
+create user fs_hol_user14 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl14;
+create user fs_hol_user15 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl15;
+create user fs_hol_user16 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl16;
+create user fs_hol_user17 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl17;
+create user fs_hol_user18 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl18;
+create user fs_hol_user19 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl19;
+create user fs_hol_user20 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl20;
+create user fs_hol_user21 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl21;
+create user fs_hol_user22 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl22;
+create user fs_hol_user23 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl23;
+create user fs_hol_user24 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl24;
+create user fs_hol_user25 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl25;
+create user fs_hol_user26 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl26;
+create user fs_hol_user27 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl27;
+create user fs_hol_user28 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl28;
+create user fs_hol_user29 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl29;
+create user fs_hol_user30 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl30;
 
 
 -----------------------------------------------------
