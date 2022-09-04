@@ -2,12 +2,27 @@
 Hands-on-lab
 https://github.com/Snowflake-Labs/sfguide-financial-asset-management/tree/master/hands-on-lab
 
-
 */
-----------------------------------------------------------------------------------------------------------
---setup
-    use role accountadmin;
 
+use role accountadmin;
+
+-----------------------------------------------------------------------------------------------------------
+--Compute
+    create warehouse if not exists fs_hol_xsmall with warehouse_size = 'xsmall' auto_suspend = 60 initially_suspended = true max_cluster_count = 6;
+    grant ownership on warehouse fs_hol_xsmall to role finservam_admin;
+
+
+----------------------------------------------------------------------------------------------------------
+--We set the password to a random 3 letter string
+--We can retrieve it by either running select $pwd or looking at the query history
+
+set pwd = (select randstr(3, random()) from table(generator(rowcount => 1)));
+select $pwd;
+
+
+
+----------------------------------------------------------------------------------------------------------
+---Setup
     //Create role
     create role fs_hol_rl comment = 'FinServ Hands On Lab';
     grant role fs_hol_rl to role finservam_admin;
@@ -26,20 +41,56 @@ https://github.com/Snowflake-Labs/sfguide-financial-asset-management/tree/master
 
 
 
-    //Create compute
-    create warehouse if not exists fs_hol_xsmall with warehouse_size = 'xsmall' auto_suspend = 60 initially_suspended = true max_cluster_count = 6;
-//    create warehouse if not exists fs_hol_xlarge with warehouse_size = 'xlarge' auto_suspend = 60 initially_suspended = true max_cluster_count = 4;
-
-    grant ownership on warehouse fs_hol_xsmall to role finservam_admin;
-//    grant ownership on warehouse fs_hol_xlarge to role finservam_admin;
 
 
 ----------------------------------------------------------------------------------------------------------
 --Zero Copy Clone fs_hol1 only
-
 create database fs_hol1 clone finservam;
 create database fs_hol2 clone finservam;
 create database fs_hol3 clone finservam;
+
+-----------------------------------------------------
+--role
+create role fs_hol_rl1; grant role fs_hol_rl1 to role finservam_admin;
+create role fs_hol_rl2; grant role fs_hol_rl2 to role finservam_admin;
+create role fs_hol_rl3; grant role fs_hol_rl3 to role finservam_admin;
+
+-----------------------------------------------------
+--user
+create user fs_hol_user1 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl1;
+create user fs_hol_user2 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl2;
+create user fs_hol_user3 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl3;
+
+-----------------------------------------------------
+--grant role to user
+grant role fs_hol_rl1 to user fs_hol_user1;
+grant role fs_hol_rl2 to user fs_hol_user2;
+grant role fs_hol_rl3 to user fs_hol_user3;
+
+
+
+-----------------------------------------------------
+--very granular privilege model
+
+grant all privileges on database fs_hol1 to role fs_hol_rl1; grant ownership on schema fs_hol1.public to role fs_hol_rl1; grant ownership on schema fs_hol1.middleware to role fs_hol_rl1; grant ownership on all tables in schema fs_hol1.public to role fs_hol_rl1; grant ownership on all views in schema fs_hol1.public to role fs_hol_rl1; grant ownership on all views in schema fs_hol1.middleware to role fs_hol_rl1; grant monitor, operate, usage on warehouse fs_hol_xsmall to role fs_hol_rl1;
+grant all privileges on database fs_hol2 to role fs_hol_rl2; grant ownership on schema fs_hol2.public to role fs_hol_rl2; grant ownership on schema fs_hol2.middleware to role fs_hol_rl2; grant ownership on all tables in schema fs_hol2.public to role fs_hol_rl2; grant ownership on all views in schema fs_hol2.public to role fs_hol_rl2; grant ownership on all views in schema fs_hol2.middleware to role fs_hol_rl2; grant monitor, operate, usage on warehouse fs_hol_xsmall to role fs_hol_rl2;
+grant all privileges on database fs_hol3 to role fs_hol_rl3; grant ownership on schema fs_hol3.public to role fs_hol_rl3; grant ownership on schema fs_hol3.middleware to role fs_hol_rl3; grant ownership on all tables in schema fs_hol3.public to role fs_hol_rl3; grant ownership on all views in schema fs_hol3.public to role fs_hol_rl3; grant ownership on all views in schema fs_hol3.middleware to role fs_hol_rl3; grant monitor, operate, usage on warehouse fs_hol_xsmall to role fs_hol_rl3;
+
+
+
+
+
+
+
+----------------------------------------------------------------------------------------------------------
+--set isResetFull to 1 to reset user 4-30 as well
+--2min36sec runtime
+
+execute immediate $$
+begin
+  let isResetFull := 1;
+  if (isResetFull = 1) then
+
 create database fs_hol4 clone finservam;
 create database fs_hol5 clone finservam;
 create database fs_hol6 clone finservam;
@@ -68,12 +119,6 @@ create database fs_hol28 clone finservam;
 create database fs_hol29 clone finservam;
 create database fs_hol30 clone finservam;
 
-
------------------------------------------------------
---role
-create role fs_hol_rl1; grant role fs_hol_rl1 to role finservam_admin;
-create role fs_hol_rl2; grant role fs_hol_rl2 to role finservam_admin;
-create role fs_hol_rl3; grant role fs_hol_rl3 to role finservam_admin;
 create role fs_hol_rl4; grant role fs_hol_rl4 to role finservam_admin;
 create role fs_hol_rl5; grant role fs_hol_rl5 to role finservam_admin;
 create role fs_hol_rl6; grant role fs_hol_rl6 to role finservam_admin;
@@ -102,50 +147,34 @@ create role fs_hol_rl28; grant role fs_hol_rl28 to role finservam_admin;
 create role fs_hol_rl29; grant role fs_hol_rl29 to role finservam_admin;
 create role fs_hol_rl30; grant role fs_hol_rl30 to role finservam_admin;
 
+create user fs_hol_user4 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl4;
+create user fs_hol_user5 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl5;
+create user fs_hol_user6 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl6;
+create user fs_hol_user7 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl7;
+create user fs_hol_user8 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl8;
+create user fs_hol_user9 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl9;
+create user fs_hol_user10 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl10;
+create user fs_hol_user11 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl11;
+create user fs_hol_user12 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl12;
+create user fs_hol_user13 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl13;
+create user fs_hol_user14 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl14;
+create user fs_hol_user15 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl15;
+create user fs_hol_user16 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl16;
+create user fs_hol_user17 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl17;
+create user fs_hol_user18 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl18;
+create user fs_hol_user19 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl19;
+create user fs_hol_user20 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl20;
+create user fs_hol_user21 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl21;
+create user fs_hol_user22 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl22;
+create user fs_hol_user23 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl23;
+create user fs_hol_user24 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl24;
+create user fs_hol_user25 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl25;
+create user fs_hol_user26 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl26;
+create user fs_hol_user27 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl27;
+create user fs_hol_user28 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl28;
+create user fs_hol_user29 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl29;
+create user fs_hol_user30 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl30;
 
-
------------------------------------------------------
---user
---THIS WILL INTENTIONALLY BREAK UNTIL YOU FIND & REPLACE "password = ,"
-
-create user fs_hol_user1 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl1;
-create user fs_hol_user2 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl2;
-create user fs_hol_user3 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl3;
-create user fs_hol_user4 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl4;
-create user fs_hol_user5 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl5;
-create user fs_hol_user6 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl6;
-create user fs_hol_user7 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl7;
-create user fs_hol_user8 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl8;
-create user fs_hol_user9 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl9;
-create user fs_hol_user10 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl10;
-create user fs_hol_user11 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl11;
-create user fs_hol_user12 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl12;
-create user fs_hol_user13 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl13;
-create user fs_hol_user14 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl14;
-create user fs_hol_user15 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl15;
-create user fs_hol_user16 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl16;
-create user fs_hol_user17 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl17;
-create user fs_hol_user18 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl18;
-create user fs_hol_user19 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl19;
-create user fs_hol_user20 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl20;
-create user fs_hol_user21 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl21;
-create user fs_hol_user22 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl22;
-create user fs_hol_user23 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl23;
-create user fs_hol_user24 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl24;
-create user fs_hol_user25 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl25;
-create user fs_hol_user26 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl26;
-create user fs_hol_user27 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl27;
-create user fs_hol_user28 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl28;
-create user fs_hol_user29 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl29;
-create user fs_hol_user30 password = , default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl30;
-
-
------------------------------------------------------
---grant role to user
-
-grant role fs_hol_rl1 to user fs_hol_user1;
-grant role fs_hol_rl2 to user fs_hol_user2;
-grant role fs_hol_rl3 to user fs_hol_user3;
 grant role fs_hol_rl4 to user fs_hol_user4;
 grant role fs_hol_rl5 to user fs_hol_user5;
 grant role fs_hol_rl6 to user fs_hol_user6;
@@ -174,16 +203,6 @@ grant role fs_hol_rl28 to user fs_hol_user28;
 grant role fs_hol_rl29 to user fs_hol_user29;
 grant role fs_hol_rl30 to user fs_hol_user30;
 
-//show grants to role fs_hol_rl;
-//show grants to user fs_hol_user2;
-
-
------------------------------------------------------
---very granular privilege model
-
-grant all privileges on database fs_hol1 to role fs_hol_rl1; grant ownership on schema fs_hol1.public to role fs_hol_rl1; grant ownership on schema fs_hol1.middleware to role fs_hol_rl1; grant ownership on all tables in schema fs_hol1.public to role fs_hol_rl1; grant ownership on all views in schema fs_hol1.public to role fs_hol_rl1; grant ownership on all views in schema fs_hol1.middleware to role fs_hol_rl1; grant monitor, operate, usage on warehouse fs_hol_xsmall to role fs_hol_rl1;
-grant all privileges on database fs_hol2 to role fs_hol_rl2; grant ownership on schema fs_hol2.public to role fs_hol_rl2; grant ownership on schema fs_hol2.middleware to role fs_hol_rl2; grant ownership on all tables in schema fs_hol2.public to role fs_hol_rl2; grant ownership on all views in schema fs_hol2.public to role fs_hol_rl2; grant ownership on all views in schema fs_hol2.middleware to role fs_hol_rl2; grant monitor, operate, usage on warehouse fs_hol_xsmall to role fs_hol_rl2;
-grant all privileges on database fs_hol3 to role fs_hol_rl3; grant ownership on schema fs_hol3.public to role fs_hol_rl3; grant ownership on schema fs_hol3.middleware to role fs_hol_rl3; grant ownership on all tables in schema fs_hol3.public to role fs_hol_rl3; grant ownership on all views in schema fs_hol3.public to role fs_hol_rl3; grant ownership on all views in schema fs_hol3.middleware to role fs_hol_rl3; grant monitor, operate, usage on warehouse fs_hol_xsmall to role fs_hol_rl3;
 grant all privileges on database fs_hol4 to role fs_hol_rl4; grant ownership on schema fs_hol4.public to role fs_hol_rl4; grant ownership on schema fs_hol4.middleware to role fs_hol_rl4; grant ownership on all tables in schema fs_hol4.public to role fs_hol_rl4; grant ownership on all views in schema fs_hol4.public to role fs_hol_rl4; grant ownership on all views in schema fs_hol4.middleware to role fs_hol_rl4; grant monitor, operate, usage on warehouse fs_hol_xsmall to role fs_hol_rl4;
 grant all privileges on database fs_hol5 to role fs_hol_rl5; grant ownership on schema fs_hol5.public to role fs_hol_rl5; grant ownership on schema fs_hol5.middleware to role fs_hol_rl5; grant ownership on all tables in schema fs_hol5.public to role fs_hol_rl5; grant ownership on all views in schema fs_hol5.public to role fs_hol_rl5; grant ownership on all views in schema fs_hol5.middleware to role fs_hol_rl5; grant monitor, operate, usage on warehouse fs_hol_xsmall to role fs_hol_rl5;
 grant all privileges on database fs_hol6 to role fs_hol_rl6; grant ownership on schema fs_hol6.public to role fs_hol_rl6; grant ownership on schema fs_hol6.middleware to role fs_hol_rl6; grant ownership on all tables in schema fs_hol6.public to role fs_hol_rl6; grant ownership on all views in schema fs_hol6.public to role fs_hol_rl6; grant ownership on all views in schema fs_hol6.middleware to role fs_hol_rl6; grant monitor, operate, usage on warehouse fs_hol_xsmall to role fs_hol_rl6;
@@ -211,3 +230,19 @@ grant all privileges on database fs_hol27 to role fs_hol_rl27; grant ownership o
 grant all privileges on database fs_hol28 to role fs_hol_rl28; grant ownership on schema fs_hol28.public to role fs_hol_rl28; grant ownership on schema fs_hol28.middleware to role fs_hol_rl28; grant ownership on all tables in schema fs_hol28.public to role fs_hol_rl28; grant ownership on all views in schema fs_hol28.public to role fs_hol_rl28; grant ownership on all views in schema fs_hol28.middleware to role fs_hol_rl28; grant monitor, operate, usage on warehouse fs_hol_xsmall to role fs_hol_rl28;
 grant all privileges on database fs_hol29 to role fs_hol_rl29; grant ownership on schema fs_hol29.public to role fs_hol_rl29; grant ownership on schema fs_hol29.middleware to role fs_hol_rl29; grant ownership on all tables in schema fs_hol29.public to role fs_hol_rl29; grant ownership on all views in schema fs_hol29.public to role fs_hol_rl29; grant ownership on all views in schema fs_hol29.middleware to role fs_hol_rl29; grant monitor, operate, usage on warehouse fs_hol_xsmall to role fs_hol_rl29;
 grant all privileges on database fs_hol30 to role fs_hol_rl30; grant ownership on schema fs_hol30.public to role fs_hol_rl30; grant ownership on schema fs_hol30.middleware to role fs_hol_rl30; grant ownership on all tables in schema fs_hol30.public to role fs_hol_rl30; grant ownership on all views in schema fs_hol30.public to role fs_hol_rl30; grant ownership on all views in schema fs_hol30.middleware to role fs_hol_rl30; grant monitor, operate, usage on warehouse fs_hol_xsmall to role fs_hol_rl30;
+
+create warehouse if not exists fs_hol_xlarge with warehouse_size = 'xlarge' auto_suspend = 60 initially_suspended = true max_cluster_count = 4;
+grant ownership on warehouse fs_hol_xlarge to role finservam_admin;
+use warehouse fs_hol_xsmall;
+
+  end if;
+end;
+$$;
+
+
+
+/*
+show grants to role fs_hol_rl;
+show grants to user fs_hol_user1;
+
+*/
