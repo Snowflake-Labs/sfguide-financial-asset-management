@@ -244,22 +244,22 @@ INSTRUCTIONS
 
 ----------------------------------------------------------------------------------------------------------
 --updates on a wide table
-create schema if not exists fs_hol3.tpcds_sf10tcl;
+    create schema if not exists fs_hol3.tpcds_sf10tcl;
 
-use schema snowflake_sample_data.tpcds_sf10tcl;
+    use schema snowflake_sample_data.tpcds_sf10tcl;
 
-select top 300 * from SNOWFLAKE_SAMPLE_DATA.TPCDS_SF10TCL.store_sales;--29B
-select top 300 * from snowflake_sample_data.tpcds_sf10tcl.item;--402K
-select top 300 * from snowflake_sample_data.tpcds_sf10tcl.store;--1.5K
-select top 300 * from snowflake_sample_data.tpcds_sf10tcl.customer;--65M
-select top 300 * from SNOWFLAKE_SAMPLE_DATA.TPCDS_SF10TCL.date_dim;--73K
+    select top 300 * from SNOWFLAKE_SAMPLE_DATA.TPCDS_SF10TCL.store_sales;--29B
+    select top 300 * from snowflake_sample_data.tpcds_sf10tcl.item;--402K
+    select top 300 * from snowflake_sample_data.tpcds_sf10tcl.store;--1.5K
+    select top 300 * from snowflake_sample_data.tpcds_sf10tcl.customer;--65M
+    select top 300 * from SNOWFLAKE_SAMPLE_DATA.TPCDS_SF10TCL.date_dim;--73K
 
-select top 300 * from date_dim where year(d_date) = 2000 and month(d_date) = 6;
+    select top 300 * from date_dim where year(d_date) = 2000 and month(d_date) = 6;
 
 
 
------------------------------------------------------
---scale up then back down
+    -----------------------------------------------------
+    --scale up then back down
         use warehouse fs_hol_medium;
         
         drop table if exists fs_hol3.tpcds_sf10tcl.sales_denorm1;
@@ -319,14 +319,16 @@ select top 300 * from date_dim where year(d_date) = 2000 and month(d_date) = 6;
 --changes to a clone
     use schema fs_hol3.tpcds_sf10tcl;
 
-    --let's demo transactions while we're at it
-    begin transaction;
-        drop table if exists fs_hol3.tpcds_sf10tcl.sales_denorm1_clone;
-        create transient table fs_hol3.tpcds_sf10tcl.sales_denorm1_clone clone fs_hol3.tpcds_sf10tcl.sales_denorm1;
-    commit;
+    --clone
+    drop table if exists fs_hol3.tpcds_sf10tcl.sales_denorm1_clone;
+    create transient table fs_hol3.tpcds_sf10tcl.sales_denorm1_clone clone fs_hol3.tpcds_sf10tcl.sales_denorm1;
     
     show tables like 'sales_denorm1%';
 
+    select i_item_sk, count(*) cnt
+    from fs_hol3.tpcds_sf10tcl.sales_denorm1_clone
+    group by 1
+    order by 2 desc;
 
     -----------------------------------------------------
     --update multiple attributes in a wide table
@@ -344,6 +346,90 @@ select top 300 * from date_dim where year(d_date) = 2000 and month(d_date) = 6;
     --verify
     select i_item_desc, i_brand, *
     from fs_hol3.tpcds_sf10tcl.sales_denorm1_clone where i_item_sk = 376283;
+    
+    
+----------------------------------------------------------------------------------------------------------
+--TRANSACTION DEMO
+
+    --all the records from GA (Georgia) are incorrect so we delete them
+    select s_state, count(*) cnt
+    from fs_hol3.tpcds_sf10tcl.sales_denorm1_clone where i_item_sk = 319037
+    group by 1
+    order by 2 desc;
+
+    --wholesale price increases and we increase price to have 50% margins
+    select i_current_price, i_wholesale_cost, i_brand, *
+    from fs_hol3.tpcds_sf10tcl.sales_denorm1_clone where i_item_sk = 319037;
+    
+    --verify but rollback since not ready to release yet
+    begin transaction;
+        delete from fs_hol3.tpcds_sf10tcl.sales_denorm1_clone 
+        where i_item_sk = 319037 and s_state = 'GA';
+    
+        --we are like Costco and want 15% margins
+        update fs_hol3.tpcds_sf10tcl.sales_denorm1_clone set
+            i_current_price = i_wholesale_cost * 1.15 
+        where i_item_sk = 319037;
+
+        --verify
+        select s_state, count(*) cnt
+        from fs_hol3.tpcds_sf10tcl.sales_denorm1_clone where i_item_sk = 319037
+        group by 1
+        order by 2 desc;
+        
+        select i_current_price, i_wholesale_cost, i_brand
+        from fs_hol3.tpcds_sf10tcl.sales_denorm1_clone where i_item_sk = 319037;
+
+        --null means no transaction
+        select current_transaction();
+    
+            --replace with your current_transaction()
+            -- describe transaction 1662471136171000000;
+
+    rollback;
+
+        --verify rollback
+        select i_current_price, i_wholesale_cost, i_brand
+        from fs_hol3.tpcds_sf10tcl.sales_denorm1_clone where i_item_sk = 319037;
+        
+        select s_state, count(*) cnt
+        from fs_hol3.tpcds_sf10tcl.sales_denorm1_clone where i_item_sk = 319037
+        group by 1
+        order by 2 desc;
+
+    --it's good let's commit it for real
+
+
+    begin transaction;
+        --we are like Costco and want 15% margins
+        update fs_hol3.tpcds_sf10tcl.sales_denorm1_clone set
+            i_current_price = i_wholesale_cost * 1.15 
+        where i_item_sk = 319037;
+
+        delete from fs_hol3.tpcds_sf10tcl.sales_denorm1_clone 
+        where i_item_sk = 319037 and s_state = 'GA';
+
+    commit;
+
+        --verify commit
+        select i_current_price, i_wholesale_cost, i_brand
+        from fs_hol3.tpcds_sf10tcl.sales_denorm1_clone where i_item_sk = 319037;
+        
+        select s_state, count(*) cnt
+        from fs_hol3.tpcds_sf10tcl.sales_denorm1_clone where i_item_sk = 319037
+        group by 1
+        order by 2 desc;
+    
+    
+    
+    --DDL is implicit commit so can't rollback
+    begin transaction;
+        drop table if exists fs_hol3.tpcds_sf10tcl.sales_denorm1_clone;
+    rollback;
+
+        --this will fail
+        -- select top 5 * from fs_hol3.tpcds_sf10tcl.sales_denorm1_clone;
+
     
 
     
