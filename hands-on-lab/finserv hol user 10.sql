@@ -6,8 +6,8 @@ INSTRUCTIONS
 1. Find & Replace in Snowsight or the text editor of your choice:
     for mac cmd-shift-h
     for windows ctrl-shift-h
-2. Replace all occurences of fs_hol999 with "fs_hol" and the UserID you were assigned ie 1-30.
-3. Change the fs_hol_rl999 to your UserID ie fs_hol_rl" and your UserID 
+2. Replace all occurences of fs_hol3 with "fs_hol" and the UserID you were assigned ie 1-30.
+3. Change the fs_hol_rl3 to your UserID ie fs_hol_rl" and your UserID 
 
 
 */
@@ -18,7 +18,7 @@ INSTRUCTIONS
 --context
     -- use role fs_hol_rl;
     -- use secondary roles all;
-    use role fs_hol_rl999; use warehouse fs_hol_xsmall; use schema fs_hol_prod.public;
+    use role fs_hol_rl3; use warehouse fs_hol_xsmall; use schema fs_hol_prod.public;
     
 
 
@@ -111,11 +111,11 @@ INSTRUCTIONS
 
 //we want to change our test / clone
   select *
-  from fs_hol999.public.trade 
+  from fs_hol3.public.trade 
   where trader = 'charles' and symbol = 'AMZN';
 
   delete
-  from fs_hol999.public.trade 
+  from fs_hol3.public.trade 
   where trader = 'charles' and symbol = 'AMZN';
 
   //we use Time Travel for DevOps & Rollbacks [configurable from 0-90 days]
@@ -125,7 +125,7 @@ INSTRUCTIONS
   
   //verify the records are gone
   select *
-  from fs_hol999.public.trade 
+  from fs_hol3.public.trade 
   where trader = 'charles' and symbol = 'AMZN';
   
   
@@ -138,77 +138,80 @@ INSTRUCTIONS
 
   //but we can use Time Travel to see before the (DML) delete
   select *
-  from fs_hol999.public.trade 
+  from fs_hol3.public.trade 
   before (statement => $queryid)
   where trader = 'charles' and symbol = 'AMZN';
   
   
   -----------------------------------------------------
   --UNDO our delete
-  insert into fs_hol999.public.trade 
+  insert into fs_hol3.public.trade 
   select *
-  from fs_hol999.public.trade 
+  from fs_hol3.public.trade 
   before (statement => $queryid)
   where trader = 'charles' and symbol = 'AMZN';
 
 //verify same as before
           select 'prod' env, count(*) cnt from fs_hol_prod.public.trade where trader = 'charles' and symbol = 'AMZN'
               union all
-          select 'dev', count(*) from fs_hol999.public.trade where trader = 'charles' and symbol = 'AMZN';
+          select 'dev', count(*) from fs_hol3.public.trade where trader = 'charles' and symbol = 'AMZN';
 
           select *
-          from fs_hol999.public.trade 
+          from fs_hol3.public.trade 
           where trader = 'charles' and symbol = 'AMZN';
 
 //we can also clone
-  create transient table fs_hol999.public.trade_clone clone fs_hol999.public.trade;
+  create transient table fs_hol3.public.trade_clone clone fs_hol3.public.trade;
   
   //let's test updates against our clone
     select *
-    from fs_hol999.public.trade_clone
+    from fs_hol3.public.trade_clone
     where trader = 'charles' and symbol = 'AMZN';
 
-    update fs_hol999.public.trade_clone set num_shares = num_shares * 10, cash = cash * 10
+    update fs_hol3.public.trade_clone set num_shares = num_shares * 10, cash = cash * 10
     where trader = 'charles' and symbol = 'AMZN';
     
     set queryID_update = last_query_id(); 
     
     select *
-    from fs_hol999.public.trade 
+    from fs_hol3.public.trade 
     before (statement => $queryID_update)
     where trader = 'charles' and symbol = 'AMZN';
 
   //let's test deletes against our clone
     select *
-    from fs_hol999.public.trade_clone
+    from fs_hol3.public.trade_clone
     where trader = 'charles' and symbol = 'TSLA';
 
-    delete from fs_hol999.public.trade_clone
+    delete from fs_hol3.public.trade_clone
     where trader = 'charles' and symbol = 'TSLA';
     
     set queryID_delete = last_query_id(); 
     
     select *
-    from fs_hol999.public.trade 
+    from fs_hol3.public.trade 
     before (statement => $queryID_delete)
     where trader = 'charles' and symbol = 'TSLA';
     
   //let's swap our UAT table with our clone then rename the previous UAT
-    alter table fs_hol999.public.trade swap with fs_hol999.public.trade_clone;
+    alter table fs_hol3.public.trade swap with fs_hol3.public.trade_clone;
     
     //verify
-      alter table fs_hol999.public.trade_clone rename to fs_hol999.public.trade_previous;
+      alter table fs_hol3.public.trade_clone rename to fs_hol3.public.trade_previous;
   
       //TSLA is gone  
       select * 
-      from fs_hol999.public.position_now 
+      from fs_hol3.public.position_now 
       where trader = 'charles'
       order by pnl desc;
 
       //AMZN has been recalculated
       select 'prod' env, * from fs_hol_prod.public.position_now where trader = 'charles' and symbol = 'AMZN'
           union all
-      select 'uat' env,  * from fs_hol999.public.position_now where trader = 'charles' and symbol = 'AMZN';
+      select 'uat' env,  * from fs_hol3.public.position_now where trader = 'charles' and symbol = 'AMZN';
+
+
+
 
 
 /*
@@ -216,15 +219,133 @@ INSTRUCTIONS
 
   -----------------------------------------------------
   --Undrop is also up to 90 days of Time Travel; DBAs and Release Managers sleep much better than backup & restore
-  drop table fs_hol999.public.trade;
+  drop table fs_hol3.public.trade;
 
   //this will fail until you undrop the table
-  select count(*) from fs_hol999.public.trade;
-  undrop table fs_hol999.public.trade;
+  select count(*) from fs_hol3.public.trade;
+  undrop table fs_hol3.public.trade;
   
   //verify undrop
-  select count(*) from fs_hol999.public.trade;
+  select count(*) from fs_hol3.public.trade;
   
   select top 10 *
-  from fs_hol999.public.trade;
+  from fs_hol3.public.trade;
 */
+
+
+
+
+
+
+
+
+
+
+
+----------------------------------------------------------------------------------------------------------
+--updates on a wide table
+create schema if not exists fs_hol3.tpcds_sf10tcl;
+
+use schema snowflake_sample_data.tpcds_sf10tcl;
+
+select top 300 * from SNOWFLAKE_SAMPLE_DATA.TPCDS_SF10TCL.store_sales;--29B
+select top 300 * from snowflake_sample_data.tpcds_sf10tcl.item;--402K
+select top 300 * from snowflake_sample_data.tpcds_sf10tcl.store;--1.5K
+select top 300 * from snowflake_sample_data.tpcds_sf10tcl.customer;--65M
+select top 300 * from SNOWFLAKE_SAMPLE_DATA.TPCDS_SF10TCL.date_dim;--73K
+
+select top 300 * from date_dim where year(d_date) = 2000 and month(d_date) = 6;
+
+
+
+-----------------------------------------------------
+--scale up then back down
+        use warehouse fs_hol_medium;
+        
+        drop table if exists fs_hol3.tpcds_sf10tcl.sales_denorm1;
+
+        --medium 2m19s
+        --7 days bytes spilled to local storage
+        create transient table fs_hol3.tpcds_sf10tcl.sales_denorm1 as 
+        select *
+        from snowflake_sample_data.tpcds_sf10tcl.store_sales ss
+        inner join snowflake_sample_data.tpcds_sf10tcl.item i on i.i_item_sk = ss.ss_item_sk
+        inner join snowflake_sample_data.tpcds_sf10tcl.store s on s.s_store_sk = ss.ss_store_sk
+        inner join snowflake_sample_data.tpcds_sf10tcl.customer c on c.c_customer_sk = ss.ss_customer_sk
+        inner join snowflake_sample_data.tpcds_sf10tcl.date_dim d on ss.ss_sold_date_sk = d.d_date_sk
+        where d_date between '2000-06-01' and '2000-06-07'
+        order by ss_sold_date_sk, ss_item_sk, ss_store_sk, ss_customer_sk;
+
+        use warehouse fs_hol_xsmall;
+
+        --cluster key for documenation and future auto-clustering as changes are made
+        alter table sales_denorm1_clone cluster by (ss_sold_date_sk, ss_item_sk, ss_store_sk, ss_customer_sk);
+
+        show tables like 'sales_denorm1%';
+
+-----------------------------------------------------
+--data discovery
+
+    //see query profile - metadata cache
+    select count(*) from fs_hol3.tpcds_sf10tcl.sales_denorm1; --58M
+
+    //see stats pane on right
+    select top 300 *
+    from fs_hol3.tpcds_sf10tcl.sales_denorm1;
+
+    //which managers had most sales?
+    select s_manager, count(*) cnt
+    from fs_hol3.tpcds_sf10tcl.sales_denorm1
+    where s_manager is not null
+    group by 1
+    order by 2 desc, 1;
+
+
+
+    //view query profile
+        //click most expensive operator: table scan
+        //notice pruning because sorted on ss_store_sk
+    select top 300 *
+    from fs_hol3.tpcds_sf10tcl.sales_denorm1
+    where s_manager = 'Robert Reyes';
+
+    //120 columns
+    select top 300 * 
+    from information_schema.columns c 
+    where c.table_name = 'SALES_DENORM1'
+    order by c.ordinal_position desc;
+
+-----------------------------------------------------
+--changes to a clone
+    use schema fs_hol3.tpcds_sf10tcl;
+
+    --let's demo transactions while we're at it
+    begin transaction;
+        drop table if exists fs_hol3.tpcds_sf10tcl.sales_denorm1_clone;
+        create transient table fs_hol3.tpcds_sf10tcl.sales_denorm1_clone clone fs_hol3.tpcds_sf10tcl.sales_denorm1;
+    commit;
+    
+    show tables like 'sales_denorm1%';
+
+
+    -----------------------------------------------------
+    --update multiple attributes in a wide table
+        --add 'New and Improved: '
+    select i_item_desc, i_brand, *
+    from fs_hol3.tpcds_sf10tcl.sales_denorm1_clone where i_item_sk = 376283;--402K
+
+    --micro-partition filtering, committed to two AZs
+    --xsmall 8s
+    update fs_hol3.tpcds_sf10tcl.sales_denorm1_clone set
+        i_item_desc = 'New and Improved: ' || i_item_desc,
+        i_brand = 'New and Improved: ' || i_brand
+    where i_item_sk = 376283;--402K
+
+    --verify
+    select i_item_desc, i_brand, *
+    from fs_hol3.tpcds_sf10tcl.sales_denorm1_clone where i_item_sk = 376283;
+    
+
+    
+
+
