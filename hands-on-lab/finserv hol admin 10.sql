@@ -5,6 +5,9 @@ https://github.com/Snowflake-Labs/sfguide-financial-asset-management/tree/master
 Optional
 set isResetFull to 1 to reset Labs 4-30
 
+Time
+Reset (Quick) just 3 accounts 40 seconds 
+Reset all 30 accounts 3min30s 
 
 */
 
@@ -96,7 +99,7 @@ grant all privileges on database fs_hol3 to role fs_hol_rl3; grant ownership on 
 
 execute immediate $$
 begin
-  let isResetFull := 0;
+  let isResetFull := 1;
   if (isResetFull = 1) then
 
 create database fs_hol4 clone finservam;
@@ -243,4 +246,5 @@ grant all privileges on database fs_hol30 to role fs_hol_rl30; grant ownership o
 end;
 $$;
 
-
+--HP4
+select $pwd;
