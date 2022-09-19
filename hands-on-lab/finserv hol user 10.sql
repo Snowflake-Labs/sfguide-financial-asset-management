@@ -6,8 +6,8 @@ INSTRUCTIONS
 1. Find & Replace in Snowsight or the text editor of your choice:
     for mac cmd-shift-h
     for windows ctrl-shift-h
-2. Replace all occurences of database "fs_hol30" with "fs_hol" and the UserID you were assigned ie 1-30 ie. fs_hol_10
-3. Change the role fs_hol_rl3 to your UserID ie fs_hol_rl" and your UserID ie. fs_hol_rl10
+2. Replace all occurences of database "fs_hol3" with "fs_hol" and the UserID you were assigned ie 1-30 ie. fs_hol_14
+3. Change the role fs_hol_rl3 to your UserID ie fs_hol_rl" and your UserID ie. fs_hol_rl14
 
 
 */
@@ -18,7 +18,7 @@ INSTRUCTIONS
 --context
     -- use role fs_hol_rl;
     -- use secondary roles all;
-    use role fs_hol_rl30; use warehouse fs_hol_xsmall; use schema fs_hol_prod.public;
+    use role fs_hol_rl3; use warehouse fs_hol_xsmall; use schema fs_hol_prod.public;
     
 
 
@@ -111,11 +111,11 @@ INSTRUCTIONS
 
 //we want to change our test / clone
   select *
-  from fs_hol30.public.trade 
+  from fs_hol3.public.trade 
   where trader = 'charles' and symbol = 'AMZN';
 
   delete
-  from fs_hol30.public.trade 
+  from fs_hol3.public.trade 
   where trader = 'charles' and symbol = 'AMZN';
 
   //we use Time Travel for DevOps & Rollbacks [configurable from 0-90 days]
@@ -125,7 +125,7 @@ INSTRUCTIONS
   
   //verify the records are gone
   select *
-  from fs_hol30.public.trade 
+  from fs_hol3.public.trade 
   where trader = 'charles' and symbol = 'AMZN';
   
   
@@ -138,77 +138,77 @@ INSTRUCTIONS
 
   //but we can use Time Travel to see before the (DML) delete
   select *
-  from fs_hol30.public.trade 
+  from fs_hol3.public.trade 
   before (statement => $queryid)
   where trader = 'charles' and symbol = 'AMZN';
   
   
   -----------------------------------------------------
   --UNDO our delete
-  insert into fs_hol30.public.trade 
+  insert into fs_hol3.public.trade 
   select *
-  from fs_hol30.public.trade 
+  from fs_hol3.public.trade 
   before (statement => $queryid)
   where trader = 'charles' and symbol = 'AMZN';
 
 //verify same as before
           select 'prod' env, count(*) cnt from fs_hol_prod.public.trade where trader = 'charles' and symbol = 'AMZN'
               union all
-          select 'dev', count(*) from fs_hol30.public.trade where trader = 'charles' and symbol = 'AMZN';
+          select 'dev', count(*) from fs_hol3.public.trade where trader = 'charles' and symbol = 'AMZN';
 
           select *
-          from fs_hol30.public.trade 
+          from fs_hol3.public.trade 
           where trader = 'charles' and symbol = 'AMZN';
 
 //we can also clone
-  create transient table fs_hol30.public.trade_clone clone fs_hol30.public.trade;
+  create transient table fs_hol3.public.trade_clone clone fs_hol3.public.trade;
   
   //let's test updates against our clone
     select *
-    from fs_hol30.public.trade_clone
+    from fs_hol3.public.trade_clone
     where trader = 'charles' and symbol = 'AMZN';
 
-    update fs_hol30.public.trade_clone set num_shares = num_shares * 10, cash = cash * 10
+    update fs_hol3.public.trade_clone set num_shares = num_shares * 10, cash = cash * 10
     where trader = 'charles' and symbol = 'AMZN';
     
     set queryID_update = last_query_id(); 
     
     select *
-    from fs_hol30.public.trade 
+    from fs_hol3.public.trade 
     before (statement => $queryID_update)
     where trader = 'charles' and symbol = 'AMZN';
 
   //let's test deletes against our clone
     select *
-    from fs_hol30.public.trade_clone
+    from fs_hol3.public.trade_clone
     where trader = 'charles' and symbol = 'TSLA';
 
-    delete from fs_hol30.public.trade_clone
+    delete from fs_hol3.public.trade_clone
     where trader = 'charles' and symbol = 'TSLA';
     
     set queryID_delete = last_query_id(); 
     
     select *
-    from fs_hol30.public.trade 
+    from fs_hol3.public.trade 
     before (statement => $queryID_delete)
     where trader = 'charles' and symbol = 'TSLA';
     
   //let's swap our UAT table with our clone then rename the previous UAT
-    alter table fs_hol30.public.trade swap with fs_hol30.public.trade_clone;
+    alter table fs_hol3.public.trade swap with fs_hol3.public.trade_clone;
     
     //verify
-      alter table fs_hol30.public.trade_clone rename to fs_hol30.public.trade_previous;
+      alter table fs_hol3.public.trade_clone rename to fs_hol3.public.trade_previous;
   
       //TSLA is gone  
       select * 
-      from fs_hol30.public.position_now 
+      from fs_hol3.public.position_now 
       where trader = 'charles'
       order by pnl desc;
 
       //AMZN has been recalculated
       select 'prod' env, * from fs_hol_prod.public.position_now where trader = 'charles' and symbol = 'AMZN'
           union all
-      select 'uat' env,  * from fs_hol30.public.position_now where trader = 'charles' and symbol = 'AMZN';
+      select 'uat' env,  * from fs_hol3.public.position_now where trader = 'charles' and symbol = 'AMZN';
 
 
 
@@ -219,17 +219,17 @@ INSTRUCTIONS
 
   -----------------------------------------------------
   --Undrop is also up to 90 days of Time Travel; DBAs and Release Managers sleep much better than backup & restore
-  drop table fs_hol30.public.trade;
+  drop table fs_hol3.public.trade;
 
   //this will fail until you undrop the table
-  select count(*) from fs_hol30.public.trade;
-  undrop table fs_hol30.public.trade;
+  select count(*) from fs_hol3.public.trade;
+  undrop table fs_hol3.public.trade;
   
   //verify undrop
-  select count(*) from fs_hol30.public.trade;
+  select count(*) from fs_hol3.public.trade;
   
   select top 10 *
-  from fs_hol30.public.trade;
+  from fs_hol3.public.trade;
 */
 
 
@@ -244,7 +244,7 @@ INSTRUCTIONS
 
 ----------------------------------------------------------------------------------------------------------
 --updates on a wide table
-    create schema if not exists fs_hol30.tpcds_sf10tcl;
+    create schema if not exists fs_hol3.tpcds_sf10tcl;
 
     use schema snowflake_sample_data.tpcds_sf10tcl;
 
@@ -262,11 +262,11 @@ INSTRUCTIONS
     --scale up then back down
         use warehouse fs_hol_medium;
         
-        drop table if exists fs_hol30.tpcds_sf10tcl.sales_denorm1;
+        drop table if exists fs_hol3.tpcds_sf10tcl.sales_denorm1;
 
         --medium 2m19s
         --7 days bytes spilled to local storage
-        create transient table fs_hol30.tpcds_sf10tcl.sales_denorm1 as 
+        create transient table fs_hol3.tpcds_sf10tcl.sales_denorm1 as 
         select *
         from snowflake_sample_data.tpcds_sf10tcl.store_sales ss
         inner join snowflake_sample_data.tpcds_sf10tcl.item i on i.i_item_sk = ss.ss_item_sk
@@ -287,15 +287,15 @@ INSTRUCTIONS
 --data discovery
 
     //see query profile - metadata cache
-    select count(*) from fs_hol30.tpcds_sf10tcl.sales_denorm1; --58M
+    select count(*) from fs_hol3.tpcds_sf10tcl.sales_denorm1; --58M
 
     //see stats pane on right
     select top 300 *
-    from fs_hol30.tpcds_sf10tcl.sales_denorm1;
+    from fs_hol3.tpcds_sf10tcl.sales_denorm1;
 
     //which managers had most sales?
     select s_manager, count(*) cnt
-    from fs_hol30.tpcds_sf10tcl.sales_denorm1
+    from fs_hol3.tpcds_sf10tcl.sales_denorm1
     where s_manager is not null
     group by 1
     order by 2 desc, 1;
@@ -306,7 +306,7 @@ INSTRUCTIONS
         //click most expensive operator: table scan
         //notice pruning because sorted on ss_store_sk
     select top 300 *
-    from fs_hol30.tpcds_sf10tcl.sales_denorm1
+    from fs_hol3.tpcds_sf10tcl.sales_denorm1
     where s_manager = 'Robert Reyes';
 
     //120 columns
@@ -317,16 +317,16 @@ INSTRUCTIONS
 
 -----------------------------------------------------
 --changes to a clone
-    use schema fs_hol30.tpcds_sf10tcl;
+    use schema fs_hol3.tpcds_sf10tcl;
 
     --clone
-    drop table if exists fs_hol30.tpcds_sf10tcl.sales_denorm1_clone;
-    create transient table fs_hol30.tpcds_sf10tcl.sales_denorm1_clone clone fs_hol30.tpcds_sf10tcl.sales_denorm1;
+    drop table if exists fs_hol3.tpcds_sf10tcl.sales_denorm1_clone;
+    create transient table fs_hol3.tpcds_sf10tcl.sales_denorm1_clone clone fs_hol3.tpcds_sf10tcl.sales_denorm1;
     
     show tables like 'sales_denorm1%';
 
     select i_item_sk, count(*) cnt
-    from fs_hol30.tpcds_sf10tcl.sales_denorm1_clone
+    from fs_hol3.tpcds_sf10tcl.sales_denorm1_clone
     group by 1
     order by 2 desc;
 
@@ -334,18 +334,18 @@ INSTRUCTIONS
     --update multiple attributes in a wide table
         --add 'New and Improved: '
     select i_item_desc, i_brand, *
-    from fs_hol30.tpcds_sf10tcl.sales_denorm1_clone where i_item_sk = 376283;--402K
+    from fs_hol3.tpcds_sf10tcl.sales_denorm1_clone where i_item_sk = 376283;--402K
 
     --micro-partition filtering, committed to two AZs
     --xsmall 8s
-    update fs_hol30.tpcds_sf10tcl.sales_denorm1_clone set
+    update fs_hol3.tpcds_sf10tcl.sales_denorm1_clone set
         i_item_desc = 'New and Improved: ' || i_item_desc,
         i_brand = 'New and Improved: ' || i_brand
     where i_item_sk = 376283;--402K
 
     --verify
     select i_item_desc, i_brand, *
-    from fs_hol30.tpcds_sf10tcl.sales_denorm1_clone where i_item_sk = 376283;
+    from fs_hol3.tpcds_sf10tcl.sales_denorm1_clone where i_item_sk = 376283;
     
     
 ----------------------------------------------------------------------------------------------------------
@@ -353,32 +353,32 @@ INSTRUCTIONS
 
     --all the records from GA (Georgia) are incorrect so we delete them
     select s_state, count(*) cnt
-    from fs_hol30.tpcds_sf10tcl.sales_denorm1_clone where i_item_sk = 319037
+    from fs_hol3.tpcds_sf10tcl.sales_denorm1_clone where i_item_sk = 319037
     group by 1
     order by 2 desc;
 
     --wholesale price increases and we increase price to have 50% margins
     select i_current_price, i_wholesale_cost, i_brand, *
-    from fs_hol30.tpcds_sf10tcl.sales_denorm1_clone where i_item_sk = 319037;
+    from fs_hol3.tpcds_sf10tcl.sales_denorm1_clone where i_item_sk = 319037;
     
     --verify but rollback since not ready to release yet
     begin transaction;
-        delete from fs_hol30.tpcds_sf10tcl.sales_denorm1_clone 
+        delete from fs_hol3.tpcds_sf10tcl.sales_denorm1_clone 
         where i_item_sk = 319037 and s_state = 'GA';
     
         --we are like Costco and want 15% margins
-        update fs_hol30.tpcds_sf10tcl.sales_denorm1_clone set
+        update fs_hol3.tpcds_sf10tcl.sales_denorm1_clone set
             i_current_price = i_wholesale_cost * 1.15 
         where i_item_sk = 319037;
 
         --verify
         select s_state, count(*) cnt
-        from fs_hol30.tpcds_sf10tcl.sales_denorm1_clone where i_item_sk = 319037
+        from fs_hol3.tpcds_sf10tcl.sales_denorm1_clone where i_item_sk = 319037
         group by 1
         order by 2 desc;
         
         select i_current_price, i_wholesale_cost, i_brand
-        from fs_hol30.tpcds_sf10tcl.sales_denorm1_clone where i_item_sk = 319037;
+        from fs_hol3.tpcds_sf10tcl.sales_denorm1_clone where i_item_sk = 319037;
 
         --null means no transaction
         select current_transaction();
@@ -390,10 +390,10 @@ INSTRUCTIONS
 
         --verify rollback
         select i_current_price, i_wholesale_cost, i_brand
-        from fs_hol30.tpcds_sf10tcl.sales_denorm1_clone where i_item_sk = 319037;
+        from fs_hol3.tpcds_sf10tcl.sales_denorm1_clone where i_item_sk = 319037;
         
         select s_state, count(*) cnt
-        from fs_hol30.tpcds_sf10tcl.sales_denorm1_clone where i_item_sk = 319037
+        from fs_hol3.tpcds_sf10tcl.sales_denorm1_clone where i_item_sk = 319037
         group by 1
         order by 2 desc;
 
@@ -402,21 +402,21 @@ INSTRUCTIONS
 
     begin transaction;
         --we are like Costco and want 15% margins
-        update fs_hol30.tpcds_sf10tcl.sales_denorm1_clone set
+        update fs_hol3.tpcds_sf10tcl.sales_denorm1_clone set
             i_current_price = i_wholesale_cost * 1.15 
         where i_item_sk = 319037;
 
-        delete from fs_hol30.tpcds_sf10tcl.sales_denorm1_clone 
+        delete from fs_hol3.tpcds_sf10tcl.sales_denorm1_clone 
         where i_item_sk = 319037 and s_state = 'GA';
 
     commit;
 
         --verify commit
         select i_current_price, i_wholesale_cost, i_brand
-        from fs_hol30.tpcds_sf10tcl.sales_denorm1_clone where i_item_sk = 319037;
+        from fs_hol3.tpcds_sf10tcl.sales_denorm1_clone where i_item_sk = 319037;
         
         select s_state, count(*) cnt
-        from fs_hol30.tpcds_sf10tcl.sales_denorm1_clone where i_item_sk = 319037
+        from fs_hol3.tpcds_sf10tcl.sales_denorm1_clone where i_item_sk = 319037
         group by 1
         order by 2 desc;
     
@@ -424,14 +424,13 @@ INSTRUCTIONS
     
     --DDL is implicit commit so can't rollback
     begin transaction;
-        drop table if exists fs_hol30.tpcds_sf10tcl.sales_denorm1_clone;
+        drop table if exists fs_hol3.tpcds_sf10tcl.sales_denorm1_clone;
     rollback;
 
         --this will fail
-        -- select top 5 * from fs_hol30.tpcds_sf10tcl.sales_denorm1_clone;
+        -- select top 5 * from fs_hol3.tpcds_sf10tcl.sales_denorm1_clone;
 
     
 
     
-
 
