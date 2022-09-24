@@ -39,15 +39,15 @@ select $pwd;
 
     -----------------------------------------------------
     --clone
-    create or replace database fs_hol_prod clone finservam;
-    grant all privileges on database fs_hol_prod to role public;
+    create or replace database fs_hol_uat clone finservam;
+    grant all privileges on database fs_hol_uat to role public;
     
-    grant usage on schema fs_hol_prod.public to role public;
-    grant usage on schema fs_hol_prod.middleware to role public;
+    grant usage on schema fs_hol_uat.public to role public;
+    grant usage on schema fs_hol_uat.middleware to role public;
     
-    grant select on all tables in schema fs_hol_prod.public to role public;
-    grant select on all views in schema fs_hol_prod.public to role public;
-    grant select on all views in schema fs_hol_prod.middleware to role public;
+    grant select on all tables in schema fs_hol_uat.public to role public;
+    grant select on all views in schema fs_hol_uat.public to role public;
+    grant select on all views in schema fs_hol_uat.middleware to role public;
 
 
 
@@ -67,9 +67,9 @@ create role fs_hol_rl3; grant role fs_hol_rl3 to role finservam_admin;
 
 -----------------------------------------------------
 --user
-create user fs_hol_user1 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl1;
-create user fs_hol_user2 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl2;
-create user fs_hol_user3 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl3;
+create user fs_hol_user1 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_uat.public, default_role = fs_hol_rl1;
+create user fs_hol_user2 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_uat.public, default_role = fs_hol_rl2;
+create user fs_hol_user3 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_uat.public, default_role = fs_hol_rl3;
 
 -----------------------------------------------------
 --grant role to user
@@ -85,7 +85,9 @@ grant all privileges on database fs_hol1 to role fs_hol_rl1; grant ownership on 
 grant all privileges on database fs_hol2 to role fs_hol_rl2; grant ownership on schema fs_hol2.public to role fs_hol_rl2; grant ownership on schema fs_hol2.middleware to role fs_hol_rl2; grant ownership on all tables in schema fs_hol2.public to role fs_hol_rl2; grant ownership on all views in schema fs_hol2.public to role fs_hol_rl2; grant ownership on all views in schema fs_hol2.middleware to role fs_hol_rl2; grant monitor, operate, usage on warehouse fs_hol_xsmall to role fs_hol_rl2; grant monitor, operate, usage on warehouse fs_hol_power to role fs_hol_rl2;
 grant all privileges on database fs_hol3 to role fs_hol_rl3; grant ownership on schema fs_hol3.public to role fs_hol_rl3; grant ownership on schema fs_hol3.middleware to role fs_hol_rl3; grant ownership on all tables in schema fs_hol3.public to role fs_hol_rl3; grant ownership on all views in schema fs_hol3.public to role fs_hol_rl3; grant ownership on all views in schema fs_hol3.middleware to role fs_hol_rl3; grant monitor, operate, usage on warehouse fs_hol_xsmall to role fs_hol_rl3; grant monitor, operate, usage on warehouse fs_hol_power to role fs_hol_rl3;
 
+select $pwd;
 
+/*
 
 ----------------------------------------------------------------------------------------------------------
 --set isResetFull to 1 to reset user 4-30 as well
@@ -93,7 +95,7 @@ grant all privileges on database fs_hol3 to role fs_hol_rl3; grant ownership on 
 
 execute immediate $$
 begin
-  let isResetFull := 1;
+  let isResetFull := 0;
   if (isResetFull = 1) then
 
 create database fs_hol4 clone finservam;
@@ -152,33 +154,33 @@ create role fs_hol_rl28; grant role fs_hol_rl28 to role finservam_admin;
 create role fs_hol_rl29; grant role fs_hol_rl29 to role finservam_admin;
 create role fs_hol_rl30; grant role fs_hol_rl30 to role finservam_admin;
 
-create user fs_hol_user4 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl4;
-create user fs_hol_user5 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl5;
-create user fs_hol_user6 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl6;
-create user fs_hol_user7 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl7;
-create user fs_hol_user8 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl8;
-create user fs_hol_user9 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl9;
-create user fs_hol_user10 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl10;
-create user fs_hol_user11 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl11;
-create user fs_hol_user12 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl12;
-create user fs_hol_user13 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl13;
-create user fs_hol_user14 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl14;
-create user fs_hol_user15 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl15;
-create user fs_hol_user16 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl16;
-create user fs_hol_user17 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl17;
-create user fs_hol_user18 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl18;
-create user fs_hol_user19 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl19;
-create user fs_hol_user20 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl20;
-create user fs_hol_user21 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl21;
-create user fs_hol_user22 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl22;
-create user fs_hol_user23 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl23;
-create user fs_hol_user24 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl24;
-create user fs_hol_user25 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl25;
-create user fs_hol_user26 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl26;
-create user fs_hol_user27 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl27;
-create user fs_hol_user28 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl28;
-create user fs_hol_user29 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl29;
-create user fs_hol_user30 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_prod.public, default_role = fs_hol_rl30;
+create user fs_hol_user4 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_uat.public, default_role = fs_hol_rl4;
+create user fs_hol_user5 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_uat.public, default_role = fs_hol_rl5;
+create user fs_hol_user6 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_uat.public, default_role = fs_hol_rl6;
+create user fs_hol_user7 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_uat.public, default_role = fs_hol_rl7;
+create user fs_hol_user8 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_uat.public, default_role = fs_hol_rl8;
+create user fs_hol_user9 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_uat.public, default_role = fs_hol_rl9;
+create user fs_hol_user10 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_uat.public, default_role = fs_hol_rl10;
+create user fs_hol_user11 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_uat.public, default_role = fs_hol_rl11;
+create user fs_hol_user12 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_uat.public, default_role = fs_hol_rl12;
+create user fs_hol_user13 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_uat.public, default_role = fs_hol_rl13;
+create user fs_hol_user14 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_uat.public, default_role = fs_hol_rl14;
+create user fs_hol_user15 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_uat.public, default_role = fs_hol_rl15;
+create user fs_hol_user16 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_uat.public, default_role = fs_hol_rl16;
+create user fs_hol_user17 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_uat.public, default_role = fs_hol_rl17;
+create user fs_hol_user18 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_uat.public, default_role = fs_hol_rl18;
+create user fs_hol_user19 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_uat.public, default_role = fs_hol_rl19;
+create user fs_hol_user20 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_uat.public, default_role = fs_hol_rl20;
+create user fs_hol_user21 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_uat.public, default_role = fs_hol_rl21;
+create user fs_hol_user22 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_uat.public, default_role = fs_hol_rl22;
+create user fs_hol_user23 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_uat.public, default_role = fs_hol_rl23;
+create user fs_hol_user24 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_uat.public, default_role = fs_hol_rl24;
+create user fs_hol_user25 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_uat.public, default_role = fs_hol_rl25;
+create user fs_hol_user26 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_uat.public, default_role = fs_hol_rl26;
+create user fs_hol_user27 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_uat.public, default_role = fs_hol_rl27;
+create user fs_hol_user28 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_uat.public, default_role = fs_hol_rl28;
+create user fs_hol_user29 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_uat.public, default_role = fs_hol_rl29;
+create user fs_hol_user30 password = $pwd, default_warehouse = fs_hol_xsmall, default_namespace = fs_hol_uat.public, default_role = fs_hol_rl30;
 
 grant role fs_hol_rl4 to user fs_hol_user4;
 grant role fs_hol_rl5 to user fs_hol_user5;
@@ -238,6 +240,8 @@ grant all privileges on database fs_hol30 to role fs_hol_rl30; grant ownership o
   end if;
 end;
 $$;
+
+*/
 
 --HP4
 select $pwd;
