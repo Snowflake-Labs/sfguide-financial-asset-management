@@ -14,10 +14,10 @@ drop role if exists fs_hol_rl;
 
 //warehouse
 drop warehouse if exists fs_hol_xsmall;
-drop warehouse if exists fs_hol_xlarge;
+drop warehouse if exists fs_hol_power;
 
 //database
-drop database if exists fs_hol_prod;
+drop database if exists fs_hol_uat;
 
 drop database if exists fs_hol1;
 drop database if exists fs_hol2;
