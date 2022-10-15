@@ -1,22 +1,13 @@
 /*
 Financial Services Hand-On-Labs (HOL) for User
 
-INSTRUCTIONS
-
-1. Find & Replace in Snowsight or the text editor of your choice:
-    for mac cmd-shift-h
-    for windows ctrl-shift-h
-2. Replace all occurrences of database "fs_hol3" with "fs_hol" and the UserID you were assigned ie 1-30 ie. fs_hol_14
+1. Find & Replace in Snowsight for:
+    Mac: cmd-shift-h
+    Windows: ctrl-shift-h
+2. Replace all occurrences of database fs_hol3 with fs_hol and the UserID you were assigned, ie. if you're user 14 then fs_hol14
 
 
 */
-
-
-
------------------------------------------------------
---context
-    -- change to your role<id> ie. fs_hol_rl14
-    use role fs_hol_rl3; use warehouse fs_hol_xsmall; use schema fs_hol_uat.public;
     
 
 
@@ -24,11 +15,11 @@ INSTRUCTIONS
 --ANSI standard data dictionary
 
     select table_type object_type, table_name object_name, comment /* JSON */
-    from fs_hol_uat.information_schema.tables
+    from fs_hol3.information_schema.tables
     where table_schema = 'PUBLIC' and comment is not null
         union all
     select 'COLUMN' object_type, table_name || '.' || column_name object_type, comment
-    from fs_hol_uat.information_schema.columns
+    from fs_hol3.information_schema.columns
     where table_schema = 'PUBLIC' and comment is not null
     order by 1,2;
         
@@ -37,7 +28,7 @@ INSTRUCTIONS
     //what is my position and PnL as-of a date?  
         //notice 24 hour global cache on 2nd execution
         select symbol, date, trader, cash_cumulative, num_shares_cumulative, close, market_value, PnL
-        from fs_hol_uat.public.position where date >= '2019-01-02' and symbol = 'AMZN' and trader = 'charles'
+        from fs_hol3.public.position where date >= '2019-01-02' and symbol = 'AMZN' and trader = 'charles'
         order by date;
         
 
@@ -53,7 +44,7 @@ INSTRUCTIONS
         set trader = (select top 1 trader from fs_hol_uat.public.trader sample(10) where trader is not null);
 
         select symbol, date, trader, PM, cash_now, num_share_now, close, market_value, PnL
-        from fs_hol_uat.public.position_now
+        from fs_hol3.public.position_now
         where trader = $trader
         order by PnL desc;
 
@@ -61,12 +52,12 @@ INSTRUCTIONS
 
     //trade-level granularity
         select * 
-        from fs_hol_uat.public.trade 
+        from fs_hol3.public.trade 
         where date >= '2019-01-01' and symbol = 'AMZN' and trader = 'charles'
         order by symbol, date;          
         
             //ANSI SQL
-                select get_ddl('table','fs_hol_uat.public.trade');   
+                select get_ddl('table','fs_hol3.public.trade');   
         
 
 
@@ -74,7 +65,7 @@ INSTRUCTIONS
 
 //Cross-Database Joins 
     select sl.symbol, sl.date, sl.close, cp.exchange, cp.website, cp.description
-    from fs_hol_uat.public.stock_latest sl
+    from fs_hol3.public.stock_latest sl
     inner join zepl_us_stocks_daily.public.company_profile cp on sl.symbol = cp.symbol
     where sl.symbol = 'AMZN';
 
