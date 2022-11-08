@@ -37,7 +37,6 @@ Setup the objects needed:
 
 
 //Permissions can be as granular as you'd like
-    use role accountadmin;
     create database if not exists finservam comment = 'Financial Service Asset Management';
     
     grant ownership on database finservam to role finservam_admin;
@@ -57,4 +56,3 @@ Setup the objects needed:
     grant ownership on schema middleware to role finservam_admin;
 
     use schema finservam.public;
-
