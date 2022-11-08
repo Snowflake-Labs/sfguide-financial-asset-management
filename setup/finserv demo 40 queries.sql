@@ -196,3 +196,4 @@ create database finservam_qa1 clone finservam;
   //if we don't want to wait for auto-suspend
     alter warehouse finservam_devops_wh suspend;
 
+    use schema finservam.public;
