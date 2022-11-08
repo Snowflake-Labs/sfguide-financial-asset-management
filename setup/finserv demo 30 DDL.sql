@@ -4,7 +4,7 @@ Run "script 30" to setup DDL
 size up to a xxlarge so this script can complete in 5 minutes with 1000 traders; then turn off compute
 create traders table using limit_trader parameter defaulted at 1000 traders
 create watchlist table which authorizes which stocks are eligible for trading
-populate 2.5 billion synthentic trades
+populate 2.6 billion synthentic trades
 create window-function views for position
 
 
@@ -21,9 +21,9 @@ create window-function views for position
 -----------------------------------------------------
 --OPTION: Set number of traders to be used
 
-    set limit_trader = 1000;        //on xxlarge - 2.1B trades; this build takes 1m45s
-//    set limit_trader = 2000;        //on xxlarge - 4.2B trades; this build takes 3m
-//    set limit_trader = 3000;        //on xxlarge - 6.4B trades; this build takes 4m40s
+    set limit_trader = 1000;        //on xxlarge - 2.6B trades; this build takes under 3min
+//    set limit_trader = 2000;        
+//    set limit_trader = 3000;        
 
     set limit_pm = $limit_trader / 10;   //Every Portfolio Manager (PM) will have 10 traders reporting to her.
 
@@ -206,8 +206,19 @@ commit;
           inner join public.watchlist w on h.symbol = w.symbol and w.symbol in ('AMZN','CAT','COF','GE','GOOG','MCK','MSFT','NFLX','SBUX','TSLA','VOO','XOM')
           where (h.close <> 0 and year(date) = 2019 and month(date) not in (1,3)) or (h.close <> 0 and year(date) >= 2020)
         order by 8,2,1;--Trader, symbol, date
-        
-        
+
+    -----------------------------------------------------
+    --clustering
+    
+        --create clustered key based on what we sorted
+            alter table trade cluster by (trader, symbol, date);
+
+        --cluster_by column
+            show tables like 'trade';
+    
+        --we can enable / disable automatic clustering
+        -- alter table trade suspend recluster;
+
 
       //we focus on trader charles during our demo so we specifically add him in
       begin transaction;
@@ -216,6 +227,7 @@ commit;
             insert into trader
             select 'charles' trader, 'warren' PM, 2000000 buying_power;
       commit;
+
 
         //we can create comments on view columns
         -----------------------------------------------------
@@ -280,11 +292,11 @@ commit;
         from middleware.share_now p
         left outer join stock_latest l on p.symbol = l.symbol;
 
+
 ----------------------------------------------------------------------------------------------------------
 --size down to save money
   
-        alter warehouse finservam_datascience_wh set warehouse_size = 'xsmall';
+        alter warehouse finservam_datascience_wh set warehouse_size = 'small';
         
         //option to shutdown
         alter warehouse finservam_datascience_wh suspend;
-

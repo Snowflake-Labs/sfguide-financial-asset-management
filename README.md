@@ -41,9 +41,9 @@ It's default is set to 1000 traders to populate in the trader table which when m
     
 limit_trader  | Trades generated | Script 30 Run-time with xxlarge compute
 --------------|------------------|------------------------------
-1000 (default)| 2.4 billion      | 1:45 (1 minute  : 45 seconds)
-2000          | 4.8 billion      | 3:00 (3 minutes)
-3000          | 7.2 billion      | 4:40 (4 minutes : 40 seconds)
+1000 (default)| 2.6 billion      | under 3 minutes
+2000          |                  | 
+3000          |                  | 
     
 ## Partner Demos on top of this demo
 
@@ -54,5 +54,5 @@ limit_trader  | Trades generated | Script 30 Run-time with xxlarge compute
 [Zepl](https://www.youtube.com/watch?v=PuY7LpklunM&feature=youtu.be): Founded by the creators of the Zeppelin notebook, Zepl provides a serverless way for you to easily secure, scale, and share your data science workloads (Python, SQL, R, or Scala) against Snowflake.
   
 ## To remove Demo
-    Run "optional\finserv option reset.sql".
+    Run "optional\finserv 90 reset.sql".
     If you implemented SnowSight, delete Filters and Dashboard in snowsight subfolder: scripts 33 and 35.

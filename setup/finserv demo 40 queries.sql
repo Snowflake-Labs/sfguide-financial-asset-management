@@ -15,13 +15,12 @@ What we will see
 */
 
 
-
 -----------------------------------------------------
 --context
     use role finservam_admin; use warehouse finservam_devops_wh; use schema finservam.public;
     
     //if desired, resize compute - we start low to save money
-    alter warehouse finservam_devops_wh set warehouse_size = 'xsmall';
+    alter warehouse finservam_devops_wh set warehouse_size = 'small';
 
     /*. XSMALL SMALL MEDIUM LARGE XLARGE X2LARGE X3LARGE X4LARGE  */
 
@@ -43,17 +42,10 @@ What we will see
 
 
     //what is the current PnL for trader charles? - view on trade table so always updated as trade populated
-        //notice it is a non-materialized window function view on 2 billion rows
-        select
-            symbol, date, trader, PM, 
-            to_varchar(cash_now::numeric(36,2), '999,999,999,999.00') cash_now, 
-            to_varchar(num_share_now, '999,999,999,999') num_share_now,
-            to_varchar(close::numeric(36,2), '999,999,999,999.00') close, 
-            to_varchar(market_value::numeric(36,2), '999,999,999,999.00') market_value, 
-            to_varchar(PnL::numeric(36,2), '999,999,999,999.00') PnL
+        select *
         from position_now where trader = 'charles'
         order by PnL desc;
-        
+
                 
         
     //see ranked PnL for a random trader - no indexes, statistics, vacuuming, maintenance
@@ -67,19 +59,28 @@ What we will see
         
 
     //option to disable cache
-    alter user set use_cached_result=false;  
-    alter user set use_cached_result=true; 
+//        alter user set use_cached_result=false;  
+//        alter user set use_cached_result=true; 
 
-
-    //what is my position and PnL as-of a date?  
+    //time-series: what is my position as-of a date?  
         //notice 24 hour global cache on 2nd execution
+        set dt = '2019-01-01';
+
         select symbol, date, trader, cash_cumulative, num_shares_cumulative, close, market_value, PnL
-        from position where date >= '2019-01-01' and symbol = 'AMZN' and trader = 'charles'
+        from position where date >= $dt and symbol = 'TSLA' and trader = 'charles'
         order by date;
+        
+        select top 300 * from trade;
+        
+        --metadata cache
+        select count(*) from trade;
         
 
           //dynamic view using window functions so only pay storage for trade table; trade table drives all
               select get_ddl('view','position');   
+              
+              show tables like 'trade';
+
               
 
 
@@ -125,7 +126,9 @@ What we will see
 --Zero Copy Clone for instant dev,qa,sandboxes
 use role accountadmin;
 drop database if exists finservam_qa1;
-create or replace database finservam_qa1 clone finservam;
+
+
+create database finservam_qa1 clone finservam;
 
 
 
@@ -136,16 +139,27 @@ create or replace database finservam_qa1 clone finservam;
   where trader = 'charles' and symbol = 'AMZN';
 
   //we can change clones without impacting production
-  select * --delete
+  select *
   from finservam_qa1.public.trade 
   where trader = 'charles' and symbol = 'AMZN';
+
+//  delete
+//  from finservam_qa1.public.trade 
+//  where trader = 'charles' and symbol = 'GE';
+
+
   
+  update finservam_qa1.public.trade set symbol = 'SNOW'
+  where trader = 'charles' and symbol = 'AMZN';
+
+
   //we use Time Travel for DevOps & Rollbacks [configurable from 0-90 days]
     set queryID = last_query_id(); 
   
   
   //we can also set the queryID
-      //set queryID = '01a61bc3-0504-9531-0000-7335021bd556';
+      //
+//      set queryID = '01a66082-0604-ab79-0000-7335021ce9ce';
 
 
 
@@ -168,8 +182,12 @@ create or replace database finservam_qa1 clone finservam;
   -----------------------------------------------------
   --Undrop is also up to 90 days of Time Travel; DBAs and Release Managers sleep much better than backup & restore
   drop table finservam_qa1.public.trade;
-  select count(*) from finservam_qa1.public.trade;
+  -- select count(*) from finservam_qa1.public.trade;
   undrop table finservam_qa1.public.trade;
+  
+  drop database finservam_qa1;
+  -- select count(*) from finservam_qa1.public.trade;
+  undrop database finservam_qa1;
   
 
 
@@ -178,3 +196,4 @@ create or replace database finservam_qa1 clone finservam;
   //if we don't want to wait for auto-suspend
     alter warehouse finservam_devops_wh suspend;
 
+    use schema finservam.public;

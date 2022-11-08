@@ -1,5 +1,5 @@
 /*
-What we will do in "script 20":
+Summary:
     Use a free share from the Data Marketplace to get stock price history
     Data Governance via RBAC by adding finservam_admin as role that can access data
     Data Quality Check by ensuring no duplicates
@@ -20,8 +20,9 @@ On Database Objects to your left, Click "Refresh Now" and see the Zepl share
 
 -----------------------------------------------------
 --setup
-    use role accountadmin;
+    use role finservam_admin;
     use warehouse finservam_devops_wh;
+    use schema finservam.public;
 
 /*
 --create database from marketplace share
@@ -33,12 +34,12 @@ On Database Objects to your left, Click "Refresh Now" and see the Zepl share
     grant imported privileges on database ZEPL_US_STOCKS_DAILY to role finservam_admin;
 */
 
---Test Driven Development: Verify Data Marketplace Share; Instructions are in topmost comments
+--Verify Data Marketplace Share
     select top 1 *
     from zepl_us_stocks_daily.public.stock_history;
 
 
---Test Driven Development: Verify snowflake_sample_data share; Instructions are here:
+--Verify snowflake_sample_data share
 --https://github.com/Snowflake-Labs/sfguide-financial-asset-management#how-to-install-takes-under-7-minutes-each-script-is-idempotent
     select top 1 *
     from snowflake_sample_data.tpcds_sf10tcl.customer;
@@ -46,8 +47,7 @@ On Database Objects to your left, Click "Refresh Now" and see the Zepl share
 
 --Size up compute
     alter warehouse finservam_devops_wh set warehouse_size = 'medium';
-    use role finservam_admin;
-    use schema finservam.public;
+
 
 ----------------------------------------------------------------------------------------------------------
 --Market Data Objects
@@ -101,8 +101,9 @@ On Database Objects to your left, Click "Refresh Now" and see the Zepl share
         from zepl_us_stocks_daily.public.company_profile;
         
 
------------------------------------------------------
---suspend Virtual Warehouse to save credits
-    alter warehouse finservam_devops_wh set warehouse_size = 'xsmall';
-    alter warehouse finservam_devops_wh suspend;
 
+--size back to normal size to save credits
+    alter warehouse finservam_devops_wh set warehouse_size = 'small';
+
+--optional: if we don't want to wait for auto-suspend:
+    alter warehouse finservam_devops_wh suspend;

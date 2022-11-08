@@ -1,16 +1,9 @@
-/*
-Purpose:
-    We create the objects needed for Financial Services Asset Management Demo
-    
-What we will see
-    Setup the objects needed:
-        roles (Role Based Access Control RBAC)
-        warehouses (isolated and instant compute)
-        database finservam
-        all objects owned by finservam_admin role
-
-    Optional:
-        Schemas for Sigma and Zepl writeback to Snowflake
+/*    
+Setup the objects needed:
+    roles (Role Based Access Control RBAC)
+    warehouses (isolated and instant compute)
+    database finservam
+    all objects owned by finservam_admin role
 
 
 */
@@ -20,9 +13,9 @@ What we will see
 
     //Create compute
     create warehouse if not exists finservam_devops_wh
-        with warehouse_size = 'xsmall' auto_suspend = 120 initially_suspended = true comment = 'Financial Services DevOps Compute';
+        with warehouse_size = 'small' auto_suspend = 120 initially_suspended = true comment = 'Financial Services DevOps Compute';
     create warehouse if not exists finservam_datascience_wh
-        with warehouse_size = 'xsmall' auto_suspend = 60 initially_suspended = true comment = 'DataScience will often scale to extremes';
+        with warehouse_size = 'small' auto_suspend = 60 initially_suspended = true comment = 'DataScience will often scale to extremes';
     create warehouse if not exists xsmall_const_wh
         with warehouse_size = 'xsmall' auto_suspend = 60 initially_suspended = true comment = 'Constant so should always be XS and not resized';
         
@@ -44,7 +37,6 @@ What we will see
 
 
 //Permissions can be as granular as you'd like
-    use role accountadmin;
     create database if not exists finservam comment = 'Financial Service Asset Management';
     
     grant ownership on database finservam to role finservam_admin;
@@ -58,10 +50,9 @@ What we will see
     
     grant role finservam_admin to role sysadmin;
 
-    use role finservam_admin;
     use schema finservam.public;
+
     create schema if not exists middleware comment = 'for interim objects that are not really meant for end users';
-        
+    grant ownership on schema middleware to role finservam_admin;
+
     use schema finservam.public;
-
-
