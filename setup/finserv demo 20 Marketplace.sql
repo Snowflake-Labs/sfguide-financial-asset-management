@@ -20,8 +20,9 @@ On Database Objects to your left, Click "Refresh Now" and see the Zepl share
 
 -----------------------------------------------------
 --setup
-    use role accountadmin;
+    use role finservam_admin;
     use warehouse finservam_devops_wh;
+    use schema finservam.public;
 
 /*
 --create database from marketplace share
@@ -46,8 +47,7 @@ On Database Objects to your left, Click "Refresh Now" and see the Zepl share
 
 --Size up compute
     alter warehouse finservam_devops_wh set warehouse_size = 'medium';
-    use role finservam_admin;
-    use schema finservam.public;
+
 
 ----------------------------------------------------------------------------------------------------------
 --Market Data Objects
@@ -107,4 +107,3 @@ On Database Objects to your left, Click "Refresh Now" and see the Zepl share
 
 --optional: if we don't want to wait for auto-suspend:
     alter warehouse finservam_devops_wh suspend;
-
