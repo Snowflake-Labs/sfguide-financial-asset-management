@@ -51,10 +51,10 @@ Setup the objects needed:
     
     grant role finservam_admin to role sysadmin;
 
-    use role finservam_admin;
     use schema finservam.public;
+
     create schema if not exists middleware comment = 'for interim objects that are not really meant for end users';
+    grant ownership on schema middleware to role finservam_admin;
 
     use schema finservam.public;
-
 
