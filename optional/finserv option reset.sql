@@ -7,5 +7,6 @@ drop warehouse if exists finservam_datascience_wh;
 drop warehouse if exists finservam_devops_wh;
 
 use role accountadmin;
-drop role if exists finservam_admin;
 drop database if exists zepl_us_stocks_daily;
+drop role if exists finservam_admin;
+
