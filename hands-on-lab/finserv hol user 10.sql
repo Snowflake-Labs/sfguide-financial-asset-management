@@ -264,7 +264,7 @@ Financial Services Hand-On-Labs (HOL) for User
                 where d_date between '2000-06-01' and '2000-06-07'
                 order by ss_sold_date_sk, ss_item_sk, ss_store_sk, ss_customer_sk;
 
-                use warehouse fs_hol_xsmall;
+                use warehouse fs_hol_junior;
 
         --cluster key for future auto-clustering as changes are made
         alter table sales_denorm1 cluster by (ss_sold_date_sk, ss_item_sk, ss_store_sk, ss_customer_sk);
