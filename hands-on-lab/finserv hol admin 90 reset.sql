@@ -13,7 +13,7 @@ use role accountadmin;
 drop role if exists fs_hol_rl;
 
 //warehouse
-drop warehouse if exists fs_hol_xsmall;
+drop warehouse if exists fs_hol_junior;
 drop warehouse if exists fs_hol_power;
 
 //database
