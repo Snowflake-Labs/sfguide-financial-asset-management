@@ -6,7 +6,7 @@ https://github.com/Snowflake-Labs/sfguide-financial-asset-management/tree/master
 
 */
 ----------------------------------------------------------------------------------------------------------
-
+use schema finservam.public;
 use role accountadmin;
 
 //role
