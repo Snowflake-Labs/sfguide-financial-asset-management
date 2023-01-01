@@ -4,7 +4,7 @@ Financial Services Hand-On-Labs (HOL) for User
 1. Find & Replace in Snowsight for:
     Mac: cmd-shift-h
     Windows: ctrl-shift-h
-2. Replace all occurrences of database fs_hol3 with fs_hol and the UserID you were assigned, ie. if you're user 14 then fs_hol14
+2. Replace all occurrences of database fs_hol3 with fs_hol and the UserID you were assigned, ie. if you're user 14 then fs_hol3
 
 
 */
@@ -33,15 +33,15 @@ Financial Services Hand-On-Labs (HOL) for User
         
 
           //view using window functions on 2.6B+ trade table
-              select get_ddl('view','fs_hol_uat.public.position');   
+              select get_ddl('view','fs_hol3.public.position');   
               
             //let's see the metadata cache in the query profile
-              select count(1) from trade;
+              select count(1) from fs_hol3.public.trade;
               
 
 
     //see ranked PnL for a random trader
-        set trader = (select top 1 trader from fs_hol_uat.public.trader sample(10) where trader is not null);
+        set trader = (select top 1 trader from fs_hol3.public.trader sample(10) where trader is not null);
 
         select symbol, date, trader, PM, cash_now, num_share_now, close, market_value, PnL
         from fs_hol3.public.position_now
@@ -139,7 +139,7 @@ Financial Services Hand-On-Labs (HOL) for User
   where trader = 'charles' and symbol = 'AMZN';
 
 //verify same as before
-          select 'prod' env, count(*) cnt from fs_hol_uat.public.trade where trader = 'charles' and symbol = 'AMZN'
+          select 'uat' env, count(*) cnt from fs_hol_uat.public.trade where trader = 'charles' and symbol = 'AMZN'
               union all
           select 'dev', count(*) from fs_hol3.public.trade where trader = 'charles' and symbol = 'AMZN';
 
@@ -203,9 +203,9 @@ Financial Services Hand-On-Labs (HOL) for User
 
 
 
-/*
---Uncomment this section to test undrop table
 
+--Uncomment this section to test undrop table
+/*
   -----------------------------------------------------
   --Undrop is also up to 90 days of Time Travel; DBAs and Release Managers sleep much better than backup & restore
   drop table fs_hol3.public.trade;
@@ -253,7 +253,7 @@ Financial Services Hand-On-Labs (HOL) for User
 
                 drop table if exists fs_hol3.tpcds_sf10tcl.sales_denorm1;
 
-                --medium 2m19s; large 1m41s; xlarge 50s
+                --medium 2m19s; large 1m21s; xlarge 50s
                 create transient table fs_hol3.tpcds_sf10tcl.sales_denorm1 as 
                 select *
                 from snowflake_sample_data.tpcds_sf10tcl.store_sales ss
@@ -303,7 +303,7 @@ Financial Services Hand-On-Labs (HOL) for User
     order by c.ordinal_position desc;
 
 -----------------------------------------------------
---changes to a clone
+--changes to our wide table
     use schema fs_hol3.tpcds_sf10tcl;
 
     --clone
@@ -324,7 +324,7 @@ Financial Services Hand-On-Labs (HOL) for User
     from fs_hol3.tpcds_sf10tcl.sales_denorm1_clone where i_item_sk = 376283;--402K
 
     --micro-partition filtering, committed to two AZs
-    --xsmall 8s
+    --small 6s
     update fs_hol3.tpcds_sf10tcl.sales_denorm1_clone set
         i_item_desc = 'New and Improved: ' || i_item_desc,
         i_brand = 'New and Improved: ' || i_brand
