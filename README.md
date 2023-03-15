@@ -1,10 +1,10 @@
 # Financial Services Asset Management on Snowflake Demo
 
 ### Problem
-Asset managers have spent hundreds of millions on systems to accurately give a Single Version of Truth (SVOT) in real-time.  What would such a system look like on Snowflake?
+Big banks and Asset managers have spent hundreds of millions on systems to accurately give a Single Version of Truth (SVOT) in real-time.  What would such a system look like on Snowflake?
 
 ### Solution
-    Snowflake has high performance at low TCO due to its turn-key operation and near-zero maintenance
+    Snowflake has high performance at low TCO due to its out-of-the-box operation, near-zero maintenance, and low learning curve
     SVOT makes trading, risk management, regulatory reporting, and Financial Services big data use cases significantly easier
     Unlimited Compute and Concurrency enable quick data-driven decisions
 
@@ -12,6 +12,10 @@ Asset managers have spent hundreds of millions on systems to accurately give a S
     Use the Snowflake Data Marketplace to instantly get stock history so the business doesn't have to wait for IT.
     Populate only the trade table and use window functions to generate cash, positions, and Profit-and-Loss (PnL) so that you can have real-time updates.
     Use SnowSight - Snowflake's complimentary User Interface (UI) - to generate dashboards that can be shared with the business.
+
+## Releases
+    v2.0    Use Knoema instead of the deprecated Zepl Share; Remove company_profile and stock_latest tables
+    v1.0    Use Zepl Marketplace share
 
 ## Demo and Technical Deep-Dive
 [Youtube Playlist](https://www.youtube.com/playlist?list=PLyKI7j42vSkbryDXuB7kEhzk66lmdNJ3Z)
@@ -50,8 +54,6 @@ limit_trader  | Trades generated | Script 30 Run-time with xxlarge compute
 [Data Build Tool (DBT)](https://github.com/ruwhite11/AssetManagement): Open-Sourced by a hedge fund prospect.  DBT gives you software engineering best practices on big data with concepts like Don't Repeat Yourself and Analytics Engineer.
 
 [Sigma Computing](https://sigmacomputing.wistia.com/medias/w7ck8dugdp): Excel-like analysis over 2 billion rows powered with only Snowflake Small compute power.
-
-[Zepl](https://www.youtube.com/watch?v=PuY7LpklunM&feature=youtu.be): Founded by the creators of the Zeppelin notebook, Zepl provides a serverless way for you to easily secure, scale, and share your data science workloads (Python, SQL, R, or Scala) against Snowflake.
   
 ## To remove Demo
     Run "optional\finserv 90 reset.sql".
