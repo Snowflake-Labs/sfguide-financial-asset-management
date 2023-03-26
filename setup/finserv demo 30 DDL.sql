@@ -1,7 +1,15 @@
 /*
-Run "script 30" to setup DDL
+TODO
+add snowsight
+add snowpark
+scale up to larger
 
-size up to a xxlarge so this script can complete in 5 minutes with 1000 traders; then turn off compute
+DONE
+verified 40
+
+
+
+size up so we complete quicker put pay the same cost
 create traders table using limit_trader parameter defaulted at 1000 traders
 create watchlist table which authorizes which stocks are eligible for trading
 populate 2.6 billion synthentic trades
@@ -12,128 +20,69 @@ create window-function views for position
 
 -----------------------------------------------------
 --set context and size up compute
-    use role finservam_admin; use warehouse finservam_datascience_wh; use schema finservam.public;
-
+    use role finservam_admin; use warehouse finservam_devops_wh; use schema finservam.public;
+    
     --size up since we are generating many trades 
-    --wait_for_completion can be a best practice for larger size warehouses
-    alter warehouse finservam_datascience_wh set warehouse_size = 'xxlarge' wait_for_completion = TRUE;
+    alter warehouse finservam_devops_wh set warehouse_size = 'xxlarge' wait_for_completion = TRUE;
 
 -----------------------------------------------------
---OPTION: Set number of traders to be used
-
-    set limit_trader = 1000;        //on xxlarge - 2.6B trades; this build takes under 3min
-//    set limit_trader = 2000;        
-//    set limit_trader = 3000;        
-
-    set limit_pm = $limit_trader / 10;   //Every Portfolio Manager (PM) will have 10 traders reporting to her.
+--how many traders
+/*
+traders   trades    VWh        Duration
+40        1.2B      xxlarge    1m25s
+100       3B        xxlarge    3m25s
 
 
+*/
+    set limit_trader = 100;        //on xxlarge - 2.6B trades; this build takes under 3min
+    set limit_pm = $limit_trader / 10;   //Every Portfolio Manager (PM) will have about 10 traders reporting to her.
 
+    select count(*) from trade;    
 
+-----------------------------------------------------
+--PM
+    create or replace sequence pm_id;        --unique number generator
+    
+    create or replace transient table pm
+        comment = 'PM is the Portfolio Manager who manages the traders' as
+    select
+        FAKE('en_UK','name',null)::varchar as PM,
+        pm_id.nextval id
+    from table(generator(rowcount => $limit_pm));
+    
 
-
-----------------------------------------------------------------------------------------------------------
---we use a ACID-compliant transaction here because we want the sequence to restart from 1 each time trader is built 
---since our randon function needs a range from 1 to limit_pm
-
+-----------------------------------------------------
+--trader
+--we don't need a transaction but we demo it
 begin transaction;
-    //must recreate sequence each time we use it so that it will start at 1
-        create or replace sequence pm_id;
-        
-        set limit_trader = $limit_trader - 1;       //we remove one trader since we will manually add trader charles later
+    create or replace transient table trader 
+        comment = 'Trader with their Portfolio Manager (PM) and trader authorized buying power' as
+    with cte as
+    (
+    select
+        FAKE('en_US','name',null)::varchar as trader,
+        uniform(1, $limit_pm, random()) PM_id,                //random function to assign a PM to a trader
+        uniform(1000, 3000, random())::number buying_power    //how much a trader can buy per day
+    from table(generator(rowcount => $limit_trader))
+    )
+    select
+        t.trader,
+        pm.pm,
+        t.buying_power
+    from cte t
+    inner join pm on t.pm_id = pm.id
+    order by 2,1;
 
-    //we get names from the TPC-DS data instantly available to each Snowflake account
-        create or replace transient table trader 
-            comment = 'Trader with their Portfolio Manager (PM) and trader authorized buying power' as
-        with trader as
-        (
-          select distinct c_first_name trader
-          from snowflake_sample_data.tpcds_sf10tcl.customer
-          where c_first_name is not null
-          limit $limit_trader
-        ), PM as
-        (
-          select distinct c_last_name PM, pm_id.nextval id
-          from snowflake_sample_data.tpcds_sf10tcl.customer
-          where c_last_name is not null
-        ), trader2 as
-        (
-          select
-              trader, 
-              uniform(1, $limit_pm, random()) PM_id,                //random function to assign a PM to a trader
-              uniform(4000, 8000, random())::number buying_power
-          from trader t
-        )
-        select
-            t.trader, 
-            p.pm, 
-            t.buying_power
-        from trader2 t
-        inner join pm p on t.pm_id = p.id
-        order by 2,1;
-      
-      comment on column public.trader.PM is 'Portfolio Manager (PM) manages traders';
-      comment on column public.trader.buying_power is 'Trader is authorized this buying power in each transaction';
-
+    comment on column public.trader.PM is 'Portfolio Manager (PM) manages traders';
+    comment on column public.trader.buying_power is 'Trader is authorized this buying power in each transaction';
 commit;
 
 
+select * from trader order by 1;
 
------------------------------------------------------
---we update a trader's name to "lab" and their PM to "warren" for a Data Governance demo
---last_query_id and result_scan lets us manipulate the resultset of a previous query
-    
-    select pm, count(*) cnt
-    from trader
-    group by pm
-    having count(*) > 2
-    order by 2, 1
-    limit 1;
 
-    set q = last_query_id(); 
 
-    update trader set trader = 'lab', PM = 'warren' where trader in
-    (
-        select trader
-        from trader t
-        inner join (
-          select pm from table(result_scan($q))
-        ) pm on t.pm = pm.pm
-        order by trader
-        limit 1
-    );
 
-      
-----------------------------------------------------------------------------------------------------------
---remove authorization of trades that have a close price of <1 or >4500
-        create or replace transient table public.watchlist
-            comment = 'what assets we are interested in owning'
-        as
-            select c.*, 'all_authorized' Trader
-            from public.company_profile c
-            inner join public.stock_latest l on c.symbol = l.symbol     --ensure stock still traded 
-            where mktcap is not null
-            and exchange like 'N%'
-            and c.symbol not in 
-            (
-                select distinct symbol
-                from public.stock_history
-                where close < 1 or close > 4500
-            )
-            and c.symbol not in ('AMZN','CAT','COF','GE','GOOG','MCK','MSFT','NFLX','SBUX','TSLA','VOO','XOM')  //we will add these in later
-            order by mktcap desc
-            //Option: raise the limit for more stress testing by authoring more stocks to be traded per day
-            //we set the limit at 1000-12 which is 988
-            limit 988; 
-
-        //we add these 12 symbols specifically because we've highlighted trader charles trading these symbols later in the demo. This 998 + 12 = 1000 trades daily           
-        insert into public.watchlist
-            select *, 'all_authorized'::varchar(50) Trader
-            from company_profile
-            where symbol in ('AMZN','CAT','COF','GE','GOOG','MCK','MSFT','NFLX','SBUX','TSLA','VOO','XOM')
-            order by mktcap desc;
-            
-        //and now we should have 1000 total trades made per day per trader
             
 
 
@@ -148,7 +97,7 @@ commit;
         create or replace transient table trade
             comment = 'trades made and cash used; unique_key: symbol, exchange, date'
         as
-        --buy for all traders except Charles
+        --buy action
          select
               c.*,
               round(buying_power/close,0) num_shares, 
@@ -157,14 +106,13 @@ commit;
          from
          (
             select
-                date, h.symbol, w.exchange, 'buy'::varchar(25) action, close
+                date, h.symbol, h.exchange, 'buy'::varchar(25) action, close
             from stock_history h
-            inner join watchlist w on h.symbol = w.symbol and w.trader = 'all_authorized'
-            where h.close <> 0 and year(date) between 2010 and 2019
+            where year(date) between 1981 and 2010
          ) c
          full outer join public.trader t
        union all
-        --hold for all traders except Charles
+        --hold action
          select
               c.*,
               0 num_shares, 
@@ -173,130 +121,104 @@ commit;
          from
          (
             select
-                date, h.symbol, w.exchange, 'hold'::varchar(25) action, close
+                date, h.symbol, h.exchange, 'hold'::varchar(25) action, close
             from stock_history h
-            inner join watchlist w on h.symbol = w.symbol and w.trader = 'all_authorized'
-            where h.close <> 0 and year(date) >= 2020
+            where year(date) >= 2010
          ) c
          full outer join public.trader t
-       union all
-          --for charles buy $100K in value for each ticker in Jan 2019
-          select
-              date, h.symbol, w.exchange, 'buy'::varchar(25) action, close, round(1000000/close,0) num_shares, 
-              close * round(1000000/close,0) * -1 cash,
-              'charles' Trader, 'warren' PM
-          from stock_history h
-          inner join watchlist w on h.symbol = w.symbol and w.symbol in ('AMZN','CAT','COF','GE','GOOG','MCK','MSFT','NFLX','SBUX','TSLA','VOO','XOM')
-          where h.close <> 0 and year(date) = 2019 and month(date) = 1
-        union all
-          --for charles sell $10K in value for each ticker in Mar 2019
-            select
-                date, h.symbol, w.exchange, 'sell' action, close, round(10000/close,0) * -1 num_shares, 
-                close * round(10000/close,0) cash,
-                'charles' Trader, 'warren' PM
-            from stock_history h
-            inner join watchlist w on h.symbol = w.symbol and w.symbol in ('AMZN','CAT','COF','GE','GOOG','MCK','MSFT','NFLX','SBUX','TSLA','VOO','XOM')
-            where h.close <> 0 and year(date) = 2019 and month(date) = 3
-        union all
-          --for charles hold action so shares and cash don't change
-          select
-              date, h.symbol, w.exchange, 'hold' action, close, 0, 0 cash,
-              'charles' Trader, 'warren' PM
-          from public.stock_history h
-          inner join public.watchlist w on h.symbol = w.symbol and w.symbol in ('AMZN','CAT','COF','GE','GOOG','MCK','MSFT','NFLX','SBUX','TSLA','VOO','XOM')
-          where (h.close <> 0 and year(date) = 2019 and month(date) not in (1,3)) or (h.close <> 0 and year(date) >= 2020)
         order by 8,2,1;--Trader, symbol, date
+
+-- select top 300 * from trade where trader = 'charles';
+
+-----------------------------------------------------
+--we add traders specifically to demo against
+    insert into trader values ('charles', 'warren', 1000000);
+    insert into trader values ('lab', 'warren', 1000000);
+
+
+    insert into trade
+      --for charles buy $100K in value for each ticker in Jan 2019
+      select
+          date, h.symbol, h.exchange, 'buy'::varchar(25) action, close, round(1000000/close,0) num_shares, 
+          close * round(1000000/close,0) * -1 cash,
+          'charles' Trader, 'warren' PM
+      from stock_history h
+      where h.symbol in ('AMZN','CAT','COF','GE','GOOG','MCK','MSFT','NFLX','SBUX','TSLA','VOO','XOM')
+      and year(date) = 2019 and month(date) = 1
+    union all
+      --for charles sell $10K in value for each ticker in Mar 2019
+        select
+            date, h.symbol, h.exchange, 'sell' action, close, round(10000/close,0) * -1 num_shares, 
+            close * round(10000/close,0) cash,
+            'charles' Trader, 'warren' PM
+        from stock_history h
+        where h.symbol in ('AMZN','CAT','COF','GE','GOOG','MCK','MSFT','NFLX','SBUX','TSLA','VOO','XOM')
+        and year(date) = 2019 and month(date) = 3
+    union all
+      --for charles hold action so shares and cash don't change
+      select
+          date, h.symbol, h.exchange, 'hold' action, close, 0, 0 cash,
+          'charles' Trader, 'warren' PM
+      from public.stock_history h
+      where h.symbol in ('AMZN','CAT','COF','GE','GOOG','MCK','MSFT','NFLX','SBUX','TSLA','VOO','XOM')
+      and (
+              (year(date) = 2019 and month(date) not in (1,3)) or
+              (year(date) >= 2020)
+          )
+      order by 8,2,1;--Trader, symbol, date
+
 
     -----------------------------------------------------
     --clustering
     
-        --create clustered key based on what we sorted
-            alter table trade cluster by (trader, symbol, date);
+    --create clustered key based on what we sorted
+        alter table trade cluster by (trader, symbol, date);
 
-        --cluster_by column
-            show tables like 'trade';
-    
-        --we can enable / disable automatic clustering
-        -- alter table trade suspend recluster;
+    --cluster_by column
+        show tables like 'trade';
 
-
-      //we focus on trader charles during our demo so we specifically add him in
-      begin transaction;
-            delete from trader where trader = 'charles';
-
-            insert into trader
-            select 'charles' trader, 'warren' PM, 2000000 buying_power;
-      commit;
+    --we can enable / disable automatic clustering
+    -- alter table trade suspend recluster;
 
 
-        //we can create comments on view columns
-        -----------------------------------------------------
-          create or replace view public.position
-          (
-              symbol, exchange, date, trader, pm, num_shares_cumulative, cash_cumulative, close, market_value,
-              PnL comment 'Profit and Loss: Demonstrate comment on view column'
-          )
-            comment = 'what assets owned; demo Window Function running sum'
-          as
-          with cte as
-          (
-              select 
-                  t.symbol, exchange, t.date, trader, pm,
-                  Sum(num_shares) OVER(partition BY t.symbol, exchange, trader ORDER BY t.date rows UNBOUNDED PRECEDING ) num_shares_cumulative,
-                  Sum(cash) OVER(partition BY t.symbol, exchange, trader ORDER BY t.date rows UNBOUNDED PRECEDING ) cash_cumulative,
-                  s.close
-              from public.trade t
-              inner join public.stock_history s on t.symbol = s.symbol and s.date = t.date
-          )
+
+
+    //we can create comments on view columns
+    -----------------------------------------------------
+      create or replace view public.position
+      (
+          symbol, exchange, date, trader, pm, num_shares_cumulative, cash_cumulative, close, market_value,
+          PnL comment 'Profit and Loss: Demonstrate comment on view column'
+      )
+        comment = 'what assets owned; demo Window Function running sum'
+      as
+      with cte as
+      (
           select 
-            *,
-            num_shares_cumulative * close as market_value, 
-            (num_shares_cumulative * close) + cash_cumulative as PnL
-          from cte;
-          
-
-
-
-        -----------------------------------------------------
-          create or replace view middleware.share_now 
-            comment = 'current position, shares, and cash we have now; demo last_value ranking; 
-            placed in middleware schema since not really for end user consumption'
-          as
-          with cte as
-          (
-            select
-                symbol, exchange, trader, pm,
-                last_value(num_shares_cumulative) over (partition by symbol, exchange, trader order by date) as num_share_now,
-                last_value(cash_cumulative) over (partition by symbol, exchange, trader order by date) as cash_now,
-                case when last_value(date) over (partition by symbol, exchange, trader order by date) = date then 1 else 0 end is_current
-            from public.position
-          )
-          select symbol, exchange, trader, pm, num_share_now, cash_now
-          from cte
-          where is_current = 1;
-          
-
-          
-        -----------------------------------------------------
-        --position_now
-        create or replace view position_now        
-        (
-        symbol, exchange, trader, pm, num_share_now, cash_now, close, date, market_value,
-        PnL comment 'Profit and Loss: Demonstrate comment on view column'
-        )
-            comment = 'current market price to show value now'
-        as
-        select p.*, l.close, l.date,
-            num_share_now * close as market_value,
-            (num_share_now * close) + cash_now as PnL
-        from middleware.share_now p
-        left outer join stock_latest l on p.symbol = l.symbol;
+              t.symbol, t.exchange, t.date, trader, pm,
+              Sum(num_shares) OVER(partition BY t.symbol, t.exchange, trader ORDER BY t.date rows UNBOUNDED PRECEDING ) num_shares_cumulative,
+              Sum(cash) OVER(partition BY t.symbol, t.exchange, trader ORDER BY t.date rows UNBOUNDED PRECEDING ) cash_cumulative,
+              s.close
+          from public.trade t
+          inner join public.stock_history s on t.symbol = s.symbol and s.date = t.date
+      )
+      select 
+        *,
+        num_shares_cumulative * close as market_value, 
+        (num_shares_cumulative * close) + cash_cumulative as PnL
+      from cte;
+      
 
 
 ----------------------------------------------------------------------------------------------------------
---size down to save money
-  
-        alter warehouse finservam_datascience_wh set warehouse_size = 'small';
-        
-        //option to shutdown
-        alter warehouse finservam_datascience_wh suspend;
+--size down to save credits
+    alter warehouse finservam_devops_wh set warehouse_size = 'small';
+
+
+
+-----------------------------------------------------
+--temp
+
+-- set date = (select max(date) from trade);
+
+
