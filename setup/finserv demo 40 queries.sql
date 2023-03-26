@@ -39,11 +39,12 @@ What we will see
     order by 1,2;
 
 
-
+    set date = (select max(date) from trade);
 
     //what is the current PnL for trader charles? - view on trade table so always updated as trade populated
         select *
-        from position_now where trader = 'charles'
+        from position where trader = 'charles'
+        and date = $date
         order by PnL desc;
 
                 
@@ -51,9 +52,10 @@ What we will see
     //see ranked PnL for a random trader - no indexes, statistics, vacuuming, maintenance
         set trader = (select top 1 trader from trader sample(10) where trader is not null);
 
-        select symbol, date, trader, PM, cash_now, num_share_now, close, market_value, PnL
-        from position_now
+        select *
+        from position
         where trader = $trader
+        and date = $date
         order by PnL desc;
         
         
@@ -64,21 +66,30 @@ What we will see
 
     //time-series: what is my position as-of a date?  
         //notice 24 hour global cache on 2nd execution
-        set dt = '2019-01-01';
 
         select symbol, date, trader, cash_cumulative, num_shares_cumulative, close, market_value, PnL
-        from position where date >= $dt and symbol = 'TSLA' and trader = 'charles'
+        from position where date >= '2019-01-01' and symbol = 'TSLA' and trader = 'charles'
         order by date;
+
+        select symbol, date, trader, cash_cumulative, num_shares_cumulative, close, market_value, PnL
+        from position where date >= '1980-01-01' and symbol = 'AAPL' and trader = $trader
+        order by date;
+
         
         select top 300 * from trade;
-        
+
+
+        -- alter user set use_cached_result=false;  
+        -- alter user set use_cached_result=true; 
+
         --metadata cache
         select count(*) from trade;
         
 
           //dynamic view using window functions so only pay storage for trade table; trade table drives all
               select get_ddl('view','position');   
-              
+
+              --see the rowcount and metadata
               show tables like 'trade';
 
               
@@ -99,11 +110,26 @@ What we will see
 
 
 
+select * 
+from trade 
+where date >= '2019-12-31' and trader = 'charles'
+order by date, symbol;
+
+//Python Functions
+    select
+        FAKE('en_US','name',null)::varchar as trader
+    from table(generator(rowcount => 10));
+
+
+
 //Cross-Database Joins 
-    select sl.symbol, sl.date, sl.close, cp.exchange, cp.website, cp.description
-    from finservam.public.stock_latest sl
-    inner join zepl_us_stocks_daily.public.company_profile cp on sl.symbol = cp.symbol
-    where sl.symbol = 'AMZN';
+    set dt = '2019-01-02';
+
+    select k.*
+    from finservam.public.stock_history s
+    inner join economy_data_atlas.economy.usindssp2020 k on s.symbol = k."Company" and s.date = k."Date"
+    where k."Company" = 'AMZN' and s.date = $dt
+    order by k."Indicator Name";
 
 
 
@@ -112,9 +138,10 @@ What we will see
 //Instant Real-Time Market Data with neither copying nor FTP
         //Query terabytes immediately
         select * 
-        from zepl_us_stocks_daily.public.stock_history
-        where symbol = 'SBUX'
-        order by date desc;
+        from economy_data_atlas.economy.usindssp2020
+        where "Company" = 'SBUX'
+        and "Indicator Name" = 'Close'
+        order by "Date" desc;
         
 
 
@@ -143,13 +170,8 @@ create database finservam_qa1 clone finservam;
   from finservam_qa1.public.trade 
   where trader = 'charles' and symbol = 'AMZN';
 
-//  delete
-//  from finservam_qa1.public.trade 
-//  where trader = 'charles' and symbol = 'GE';
-
-
   
-  update finservam_qa1.public.trade set symbol = 'SNOW'
+  update finservam_qa1.public.trade set symbol = 'GE'
   where trader = 'charles' and symbol = 'AMZN';
 
 
@@ -157,9 +179,8 @@ create database finservam_qa1 clone finservam;
     set queryID = last_query_id(); 
   
   
-  //we can also set the queryID
-      //
-//      set queryID = '01a66082-0604-ab79-0000-7335021ce9ce';
+  //optional: we can also set the queryID by looking at Query History
+      //      set queryID = '01a66082-0604-ab79-0000-7335021ce9ce';
 
 
 
@@ -189,8 +210,7 @@ create database finservam_qa1 clone finservam;
   -- select count(*) from finservam_qa1.public.trade;
   undrop database finservam_qa1;
   
-
-
+  drop database finservam_qa1;
 
 
   //if we don't want to wait for auto-suspend
