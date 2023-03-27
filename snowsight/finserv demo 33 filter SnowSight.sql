@@ -1,6 +1,6 @@
 /*
-Custom filters are special keywords that resolve as a subquery or list of values.
-    https://docs.snowflake.com/en/user-guide/ui-snowsight-worksheets.html#custom-filters
+Filters are special keywords that resolve as a subquery or list of values.
+    https://docs.snowflake.com/en/user-guide/ui-snowsight-query#custom-filters
     
 The benefit of filters is:
     * it's a Single Version of the Truth (SVOT) for your business definitions
@@ -16,12 +16,18 @@ Note:
 
 */
 
--- :trader
+-- :fstrader
+-- Display Name: Trader
+-- Traders with Positions in FinServ Asset Mgmt Demo
 select distinct trader from finservam.public.trader order by 1;
 
 -- :fsdate
+-- Display Name: TradeDate
+-- Trade Dates of FinServ Asset Mgmt Demo
 select distinct date from finservam.public.trade order by 1;
 
 -- :fssymbol
+-- Display Name: TickerSymbol
+-- Symbols Traded by FinServ Asset Mgmt Demo
 select distinct symbol from finservam.public.trade order by 1;
 

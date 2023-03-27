@@ -1,9 +1,9 @@
 /*    
 Setup the objects needed:
-    roles (Role Based Access Control RBAC)
-    warehouses (isolated and instant compute)
-    database finservam
-    all objects owned by finservam_admin role
+    Role Based Access Control RBAC
+    Virtual Warehouses (compute)
+    Database
+    Objects
 
 
 */
@@ -14,8 +14,6 @@ Setup the objects needed:
     //Create compute
     create warehouse if not exists finservam_devops_wh
         with warehouse_size = 'small' auto_suspend = 120 initially_suspended = true comment = 'Financial Services DevOps Compute';
-    create warehouse if not exists finservam_datascience_wh
-        with warehouse_size = 'small' auto_suspend = 60 initially_suspended = true comment = 'DataScience will often scale to extremes';
     create warehouse if not exists xsmall_const_wh
         with warehouse_size = 'xsmall' auto_suspend = 60 initially_suspended = true comment = 'Constant so should always be XS and not resized';
         
@@ -43,7 +41,6 @@ Setup the objects needed:
     grant ownership on schema finservam.public to role finservam_admin;
     
     grant ownership on warehouse finservam_devops_wh to role finservam_admin;
-    grant ownership on warehouse finservam_datascience_wh to role finservam_admin;
     
     grant ownership on warehouse xsmall_const_wh to role sysadmin;
     grant monitor, operate, usage on warehouse xsmall_const_wh to role finservam_admin;
@@ -52,7 +49,8 @@ Setup the objects needed:
 
     use schema finservam.public;
 
-    create schema if not exists middleware comment = 'for interim objects that are not really meant for end users';
-    grant ownership on schema middleware to role finservam_admin;
+    create schema if not exists transform comment = 'for interim objects that are not really meant for end users';
+    grant ownership on schema transform to role finservam_admin;
 
     use schema finservam.public;
+    use warehouse finservam_devops_wh;
