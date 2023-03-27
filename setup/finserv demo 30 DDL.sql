@@ -1,18 +1,9 @@
 /*
-TODO
-add snowsight
-add snowpark
-scale up to larger
-
-DONE
-verified 40
-
-
 
 size up so we complete quicker put pay the same cost
 create traders table using limit_trader parameter defaulted at 1000 traders
 create watchlist table which authorizes which stocks are eligible for trading
-populate 2.6 billion synthentic trades
+populate 3 billion synthentic trades
 create window-function views for position
 
 
@@ -83,13 +74,6 @@ select * from trader order by 1;
 
 
 
-            
-
-
-
-
-
-
 ----------------------------------------------------------------------------------------------------------
 --create trade table showing buy, sell, hold actions; this is the longest running part of the script
 
@@ -133,7 +117,6 @@ select * from trader order by 1;
 -----------------------------------------------------
 --we add traders specifically to demo against
     insert into trader values ('charles', 'warren', 1000000);
-    insert into trader values ('lab', 'warren', 1000000);
 
 
     insert into trade
@@ -208,17 +191,21 @@ select * from trader order by 1;
         (num_shares_cumulative * close) + cash_cumulative as PnL
       from cte;
       
-
+-----------------------------------------------------
+--position_now
+        create or replace view public.position_now
+        comment = 'what assets owned; demo Window Function running sum for the max date in the trade table'
+        as
+        with cte as
+        (
+            select max(date) dt from public.trade
+        )        
+        select p.*
+        from cte
+        inner join position p on p.date = cte.dt;
+        
 
 ----------------------------------------------------------------------------------------------------------
 --size down to save credits
     alter warehouse finservam_devops_wh set warehouse_size = 'small';
-
-
-
------------------------------------------------------
---temp
-
--- set date = (select max(date) from trade);
-
 
