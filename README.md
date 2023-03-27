@@ -1,7 +1,12 @@
-# Financial Services Asset Management on Snowflake Demo
+# Financial Services Asset Management on Snowflake Demo Version 2.0
+
+## Releases
+    v2.0    Use Knoema instead of deprecated Zepl Share; Added Python Faker for synthetic trader creation; Rewrote Snowsight Tiles
+            Removed: company_profile, stock_latest, finservam_datascience_wh, snowflake_sample_data, share_now, middleware
+    v1.0    Use Zepl Marketplace share
 
 ### Problem
-Big banks and Asset managers have spent hundreds of millions on systems to accurately give a Single Version of Truth (SVOT) in real-time.  What would such a system look like on Snowflake?
+Big banks and Asset managers have spent millions of dollars to accurately give a Single Version of Truth (SVOT) in real-time.  What would such a system look like on Snowflake?
 
 ### Solution
     Snowflake has high performance at low TCO due to its out-of-the-box operation, near-zero maintenance, and low learning curve
@@ -13,9 +18,6 @@ Big banks and Asset managers have spent hundreds of millions on systems to accur
     Populate only the trade table and use window functions to generate cash, positions, and Profit-and-Loss (PnL) so that you can have real-time updates.
     Use SnowSight - Snowflake's complimentary User Interface (UI) - to generate dashboards that can be shared with the business.
 
-## Releases
-    v2.0    Use Knoema instead of the deprecated Zepl Share; Added Python Faker for synthetic trader creation; Removed these objects: company_profile, stock_latest, finservam_datascience_wh, snowflake_sample_data share, share_now view, middleware schema
-    v1.0    Use Zepl Marketplace share
 
 ## Demo and Technical Deep-Dive of Version 1.0
 [Youtube Playlist](https://www.youtube.com/playlist?list=PLyKI7j42vSkbryDXuB7kEhzk66lmdNJ3Z)
@@ -23,7 +25,6 @@ Big banks and Asset managers have spent hundreds of millions on systems to accur
 [Medium Blog](https://allenwongtech.medium.com/what-would-snowflake-for-an-asset-manager-look-like-part-1-a0583c0e5822)
 
 ## How to Install (Takes under 7 minutes; each script is idempotent)
-![Create a database from share named snowflake_sample_data](https://raw.githubusercontent.com/Snowflake-Labs/sfguide-financial-asset-management/master/snowflake_sample_data.jpg)
 
     Create a database named snowflake_sample_data from the sample_data share [see above pic]
     Find a share named "Knoema Economy Data Atlas" from the Snowflake Data Marketplace and name the database economy_data_atlas
