@@ -46,7 +46,7 @@ Summary:
         and "Scale" = 1
         and "Frequency" = 'D'
         and "Stock Exchange Name" in ('NASDAQ','NYSE')
-        and ("Value" = 0 or "Value" > 3000)    --We want to trade stocks within this price range
+        and ("Value" = 0 or "Value" > 3500)    --We want to trade stocks within this price range
     )
     select c.symbol
     from cte c
