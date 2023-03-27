@@ -14,10 +14,10 @@ Big banks and Asset managers have spent hundreds of millions on systems to accur
     Use SnowSight - Snowflake's complimentary User Interface (UI) - to generate dashboards that can be shared with the business.
 
 ## Releases
-    v2.0    Use Knoema instead of the deprecated Zepl Share; Remove company_profile and stock_latest tables
+    v2.0    Use Knoema instead of the deprecated Zepl Share; Added Python Faker for synthetic trader creation; Removed these objects: company_profile, stock_latest, finservam_datascience_wh, snowflake_sample_data share, share_now view, middleware schema
     v1.0    Use Zepl Marketplace share
 
-## Demo and Technical Deep-Dive
+## Demo and Technical Deep-Dive of Version 1.0
 [Youtube Playlist](https://www.youtube.com/playlist?list=PLyKI7j42vSkbryDXuB7kEhzk66lmdNJ3Z)
 
 [Medium Blog](https://allenwongtech.medium.com/what-would-snowflake-for-an-asset-manager-look-like-part-1-a0583c0e5822)
@@ -26,7 +26,7 @@ Big banks and Asset managers have spent hundreds of millions on systems to accur
 ![Create a database from share named snowflake_sample_data](https://raw.githubusercontent.com/Snowflake-Labs/sfguide-financial-asset-management/master/snowflake_sample_data.jpg)
 
     Create a database named snowflake_sample_data from the sample_data share [see above pic]
-    Find a share named "Zepl" from the Snowflake Data Marketplace and name the database ZEPL_US_STOCKS_DAILY
+    Find a share named "Knoema Economy Data Atlas" from the Snowflake Data Marketplace and name the database economy_data_atlas
     
     Run Script 10: Sets up the environment
     Run Script 20: Connects to the Data Marketplace to get free stock history
@@ -45,9 +45,9 @@ It's default is set to 1000 traders to populate in the trader table which when m
     
 limit_trader  | Trades generated | Script 30 Run-time with xxlarge compute
 --------------|------------------|------------------------------
-1000 (default)| 2.6 billion      | under 3 minutes
-2000          |                  | 
-3000          |                  | 
+100 (default) | 3 billion        | under 4 minutes
+200           |                  | 
+300           |                  | 
     
 ## Partner Demos on top of this demo
 
