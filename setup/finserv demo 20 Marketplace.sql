@@ -46,13 +46,14 @@ Summary:
         and "Scale" = 1
         and "Frequency" = 'D'
         and "Stock Exchange Name" in ('NASDAQ','NYSE')
-        and "Value" = 0
+        and ("Value" = 0 or "Value" > 3000)    --We want to trade stocks within this price range
     )
     select c.symbol
     from cte c
     left outer join transform.exclude_symbol q on c.symbol = q.symbol 
     where q.symbol is null
     order by 1;
+
 
 
 ----------------------------------------------------------------------------------------------------------
@@ -73,31 +74,30 @@ Summary:
     and "Frequency" = 'D'
     and "Stock Exchange Name" in ('NASDAQ','NYSE')
     and e.symbol is null
-    and "Company" not in ('FERG','BRKa')    --these are greater than $5000 per sharp
     order by "Company", "Date";
     
     comment on column stock_history.close is 'security price at the end of the financial market business day';
 
 
 -----------------------------------------------------
---Python FAKE
-    create or replace function FAKE(locale varchar,provider varchar,parameters variant)
-    returns variant
-    language python
-    volatile
-    runtime_version = '3.8'
-    packages = ('faker','simplejson')
-    handler = 'fake'
-    as
-    $$
-    import simplejson as json
-    from faker import Faker
-    def fake(locale,provider,parameters):
-      if type(parameters).__name__=='sqlNullWrapper':
-        parameters = {}
-      fake = Faker(locale=locale)
-      return json.loads(json.dumps(fake.format(formatter=provider,**parameters), default=str))
-    $$;
+--Python FAKE - we use this to generate synthetic traders
+create or replace function FAKE(locale varchar,provider varchar,parameters variant)
+returns variant
+language python
+volatile
+runtime_version = '3.8'
+packages = ('faker','simplejson')
+handler = 'fake'
+as
+$$
+import simplejson as json
+from faker import Faker
+def fake(locale,provider,parameters):
+  if type(parameters).__name__=='sqlNullWrapper':
+    parameters = {}
+  fake = Faker(locale=locale)
+  return json.loads(json.dumps(fake.format(formatter=provider,**parameters), default=str))
+$$;
 
 /*
 --test
