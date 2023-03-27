@@ -3,7 +3,7 @@
 size up so we complete quicker put pay the same cost
 create traders table using limit_trader parameter defaulted at 1000 traders
 create watchlist table which authorizes which stocks are eligible for trading
-populate 3 billion synthentic trades
+populate 3 billion synthetic trades
 create window-function views for position
 
 
@@ -53,7 +53,7 @@ begin transaction;
     select
         FAKE('en_US','name',null)::varchar as trader,
         uniform(1, $limit_pm, random()) PM_id,                //random function to assign a PM to a trader
-        uniform(500, 3000, random())::number buying_power    //how much a trader can buy per day
+        uniform(500, 3500, random())::number buying_power    //how much a trader can buy per day
     from table(generator(rowcount => $limit_trader))
     )
     select
@@ -95,7 +95,10 @@ select * from trader order by 1;
             where year(date) between 1981 and 2010
          ) c
          full outer join public.trader t
-       union all
+         order by 8,2,1;--Trader, symbol, date
+
+        -----------------------------------------------------         
+        insert into trade
         --hold action
          select
               c.*,
