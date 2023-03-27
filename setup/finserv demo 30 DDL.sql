@@ -201,7 +201,7 @@ select * from trader order by 1;
         as
         with cte as
         (
-            select max(date) dt from public.trade
+            select max(date) dt from public.trade where symbol in ('AAPL','SNOW')    --AAPL & SNOW are in the final update
         )        
         select p.*
         from cte
@@ -211,4 +211,3 @@ select * from trader order by 1;
 ----------------------------------------------------------------------------------------------------------
 --size down to save credits
     alter warehouse finservam_devops_wh set warehouse_size = 'small';
-
