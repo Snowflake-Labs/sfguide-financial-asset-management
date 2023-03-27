@@ -42,7 +42,7 @@ Big banks and Asset managers have spent millions of dollars to accurately give a
 ### Optional Setting:
 In the first few lines of script 30, you can set the variable *limit_trader = x*.
 
-It's default is set to 1000 traders to populate in the trader table which when multplied by ten years of daily trades will create 2.4 billion trades.  So you can create 6 billion or more trades for stress-testing and this is the relationship:
+It's default is set to 100 traders to populate in the trader table which when multplied by 40+ years of daily trades will create 3-billion-plus trades. 
     
 limit_trader  | Trades generated | Script 30 Run-time with xxlarge compute
 --------------|------------------|------------------------------
