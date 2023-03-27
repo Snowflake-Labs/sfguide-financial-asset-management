@@ -28,7 +28,7 @@ traders   trades    VWh        Duration
     set limit_trader = 100;        //on xxlarge - 2.6B trades; this build takes under 3min
     set limit_pm = $limit_trader / 10;   //Every Portfolio Manager (PM) will have about 10 traders reporting to her.
 
-    select count(*) from trade;    
+
 
 -----------------------------------------------------
 --PM
@@ -53,7 +53,7 @@ begin transaction;
     select
         FAKE('en_US','name',null)::varchar as trader,
         uniform(1, $limit_pm, random()) PM_id,                //random function to assign a PM to a trader
-        uniform(1000, 3000, random())::number buying_power    //how much a trader can buy per day
+        uniform(500, 3000, random())::number buying_power    //how much a trader can buy per day
     from table(generator(rowcount => $limit_trader))
     )
     select
