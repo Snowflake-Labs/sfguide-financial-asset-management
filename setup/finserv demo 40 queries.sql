@@ -39,83 +39,64 @@ What we will see
     order by 1,2;
 
 
-    set date = (select max(date) from trade);
 
-    //what is the current PnL for trader charles? - view on trade table so always updated as trade populated
-        select *
-        from position where trader = 'charles'
-        and date = $date
-        order by PnL desc;
+//what is the current PnL for trader charles? - view on trade table so always updated as trade populated
+    select *
+    from position_now where trader = 'charles'
+    order by PnL desc;
 
-                
-        
-    //see ranked PnL for a random trader - no indexes, statistics, vacuuming, maintenance
-        set trader = (select top 1 trader from trader sample(10) where trader is not null);
+    
+//see ranked PnL for a random trader - no indexes, statistics, vacuuming, maintenance
+    set trader = (select top 1 trader from trader sample(10) where trader is not null);
 
-        select *
-        from position
-        where trader = $trader
-        and date = $date
-        order by PnL desc;
-        
-        
+    select *
+    from position_now
+    where trader = $trader
+    order by PnL desc;
 
-    //option to disable cache
-//        alter user set use_cached_result=false;  
-//        alter user set use_cached_result=true; 
+    
+//time-series: what is my position as-of a date?  
+    //notice 24 hour global cache on 2nd execution
 
-    //time-series: what is my position as-of a date?  
-        //notice 24 hour global cache on 2nd execution
+    select symbol, date, trader, cash_cumulative, num_shares_cumulative, close, market_value, PnL
+    from position where date >= '2019-01-01' and symbol = 'TSLA' and trader = 'charles'
+    order by date;
 
-        select symbol, date, trader, cash_cumulative, num_shares_cumulative, close, market_value, PnL
-        from position where date >= '2019-01-01' and symbol = 'TSLA' and trader = 'charles'
-        order by date;
+    select symbol, date, trader, cash_cumulative, num_shares_cumulative, close, market_value, PnL
+    from position where date >= '1980-01-01' and symbol = 'AAPL' and trader = $trader
+    order by date;
 
-        select symbol, date, trader, cash_cumulative, num_shares_cumulative, close, market_value, PnL
-        from position where date >= '1980-01-01' and symbol = 'AAPL' and trader = $trader
-        order by date;
-
-        
-        select top 300 * from trade;
+    
+    select top 300 * from trade;
 
 
-        -- alter user set use_cached_result=false;  
-        -- alter user set use_cached_result=true; 
+    -- alter user set use_cached_result=false;  
+    -- alter user set use_cached_result=true; 
 
-        --metadata cache
-        select count(*) from trade;
-        
+    --metadata cache
+    select count(*) from trade;
+    
 
-          //dynamic view using window functions so only pay storage for trade table; trade table drives all
-              select get_ddl('view','position');   
+      //dynamic view using window functions so only pay storage for trade table; trade table drives all
+          select get_ddl('view','position');   
 
-              --see the rowcount and metadata
-              show tables like 'trade';
-
-              
+          --see the rowcount and metadata
+          show tables like 'trade';
 
 
 
 
+//trade - date and quantity of buy, sell, or hold action on assets: This controls the position view
+    select * 
+    from trade 
+    where date >= '2019-01-01' and symbol = 'AMZN' and trader = 'charles'
+    order by symbol, date;          
+    
+        //ansi sql; comments for queryable metadata and data catalog
+            select get_ddl('table','trade');   
 
 
-    //trade - date and quantity of buy, sell, or hold action on assets: This controls the position view
-        select * 
-        from trade 
-        where date >= '2019-01-01' and symbol = 'AMZN' and trader = 'charles'
-        order by symbol, date;          
-        
-            //ansi sql; comments for queryable metadata and data catalog
-                select get_ddl('table','trade');   
-
-
-
-select * 
-from trade 
-where date >= '2019-12-31' and trader = 'charles'
-order by date, symbol;
-
-//Python Functions
+//Python Function: Ie to generate fake data
     select
         FAKE('en_US','name',null)::varchar as trader
     from table(generator(rowcount => 10));
@@ -136,13 +117,12 @@ order by date, symbol;
 
 
 //Instant Real-Time Market Data with neither copying nor FTP
-        //Query terabytes immediately
-        select * 
-        from economy_data_atlas.economy.usindssp2020
-        where "Company" = 'SBUX'
-        and "Indicator Name" = 'Close'
-        order by "Date" desc;
-        
+    select * 
+    from economy_data_atlas.economy.usindssp2020
+    where "Company" = 'SBUX'
+    and "Indicator Name" = 'Close'
+    order by "Date" desc;
+    
 
 
 
