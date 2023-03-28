@@ -241,11 +241,11 @@ Financial Services Hand-On-Labs (HOL) for User
     use schema snowflake_sample_data.tpcds_sf10tcl;
 
     --https://www.snowflake.com/blog/tpc-ds-now-available-snowflake-samples/
-                select top 300 * from SNOWFLAKE_SAMPLE_DATA.TPCDS_SF10TCL.store_sales;--29B
-                select top 300 * from snowflake_sample_data.tpcds_sf10tcl.item;--402K
-                select top 300 * from snowflake_sample_data.tpcds_sf10tcl.store;--1.5K
-                select top 300 * from snowflake_sample_data.tpcds_sf10tcl.customer;--65M
-                select top 300 * from SNOWFLAKE_SAMPLE_DATA.TPCDS_SF10TCL.date_dim;--73K
+                select top 300 * from snowflake_sample_data.tpcds_sf10tcl.store_sales;--29b
+                select top 300 * from snowflake_sample_data.tpcds_sf10tcl.item;--402k
+                select top 300 * from snowflake_sample_data.tpcds_sf10tcl.store;--1.5k
+                select top 300 * from snowflake_sample_data.tpcds_sf10tcl.customer;--65m
+                select top 300 * from snowflake_sample_data.tpcds_sf10tcl.date_dim;--73k
                 select top 300 * from date_dim where year(d_date) = 2000 and month(d_date) = 6;
 
 
@@ -256,7 +256,7 @@ Financial Services Hand-On-Labs (HOL) for User
 
                 drop table if exists fs_hol3.tpcds_sf10tcl.sales_denorm1;
 
-                --medium 2m19s; large 1m21s; xlarge 50s
+                --medium 2m19s; large 1m1s; xlarge 50s
                 create transient table fs_hol3.tpcds_sf10tcl.sales_denorm1 as 
                 select *
                 from snowflake_sample_data.tpcds_sf10tcl.store_sales ss
@@ -268,6 +268,8 @@ Financial Services Hand-On-Labs (HOL) for User
                 order by ss_sold_date_sk, ss_item_sk, ss_store_sk, ss_customer_sk;
 
                 use warehouse fs_hol_junior;
+
+        use schema fs_hol3.tpcds_sf10tcl;
 
         --cluster key for future auto-clustering as changes are made
         alter table sales_denorm1 cluster by (ss_sold_date_sk, ss_item_sk, ss_store_sk, ss_customer_sk);
@@ -286,6 +288,7 @@ Financial Services Hand-On-Labs (HOL) for User
     from fs_hol3.tpcds_sf10tcl.sales_denorm1;
 
     //which managers had the most sales?
+        //Chart: Bar Chart; CNT(SUM), S_MANAGER Y-Axis; Orientation Horizontal
     select s_manager, count(*) cnt
     from fs_hol3.tpcds_sf10tcl.sales_denorm1
     where s_manager is not null
@@ -327,7 +330,7 @@ Financial Services Hand-On-Labs (HOL) for User
     from fs_hol3.tpcds_sf10tcl.sales_denorm1_clone where i_item_sk = 376283;--402K
 
     --micro-partition filtering, committed to two AZs
-    --small 6s
+    --small 7s
     update fs_hol3.tpcds_sf10tcl.sales_denorm1_clone set
         i_item_desc = 'New and Improved: ' || i_item_desc,
         i_brand = 'New and Improved: ' || i_brand
@@ -347,7 +350,7 @@ Financial Services Hand-On-Labs (HOL) for User
     group by 1
     order by 2 desc;
 
-    --we want to have 15% margins
+    --we want to have 15% margins (notice how price is higher than wholesale cost)
     select i_current_price, i_wholesale_cost, i_brand
     from fs_hol3.tpcds_sf10tcl.sales_denorm1_clone where i_item_sk = 319037;
     
@@ -375,10 +378,12 @@ Financial Services Hand-On-Labs (HOL) for User
         select current_transaction();
     
             --replace with your current_transaction()
-            -- describe transaction 1662471136171000000;
+            -- describe transaction 1679973219646000000;
 
     rollback;
 
+        select current_transaction();
+    
         --verify rollback
         select i_current_price, i_wholesale_cost, i_brand
         from fs_hol3.tpcds_sf10tcl.sales_denorm1_clone where i_item_sk = 319037;
@@ -388,9 +393,8 @@ Financial Services Hand-On-Labs (HOL) for User
         group by 1
         order by 2 desc;
 
-    --it's good let's commit it for real
 
-    --let's run the next 4 statements as a batch
+    --we are ready to commit: let's select all 4 statements to run them as a batch
                 begin transaction;
                     --we are like Costco and want 15% margins
                     update fs_hol3.tpcds_sf10tcl.sales_denorm1_clone set
