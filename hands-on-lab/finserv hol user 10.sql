@@ -32,18 +32,18 @@ Financial Services Hand-On-Labs (HOL) for User
         order by date;
         
 
-          //view using window functions on 2.6B+ trade table
+          //view using window functions on 3B+ trade table
               select get_ddl('view','fs_hol3.public.position');   
               
             //let's see the metadata cache in the query profile
-              select count(1) from fs_hol3.public.trade;
+              select count(*) cnt, min(date) min_date, max(date) max_date from fs_hol3.public.trade;
               
 
 
     //see ranked PnL for a random trader
         set trader = (select top 1 trader from fs_hol3.public.trader sample(10) where trader is not null);
 
-        select symbol, date, trader, PM, cash_now, num_share_now, close, market_value, PnL
+        select *
         from fs_hol3.public.position_now
         where trader = $trader
         order by PnL desc;
@@ -64,26 +64,29 @@ Financial Services Hand-On-Labs (HOL) for User
 
 
 //Cross-Database Joins 
-    select sl.symbol, sl.date, sl.close, cp.exchange, cp.website, cp.description
-    from fs_hol3.public.stock_latest sl
-    inner join zepl_us_stocks_daily.public.company_profile cp on sl.symbol = cp.symbol
-    where sl.symbol = 'AMZN';
+    set dt = '2019-01-02';
+
+    select k.*
+    from fs_hol_uat.public.stock_history s
+    inner join economy_data_atlas.economy.usindssp2020 k on s.symbol = k."Company" and s.date = k."Date"
+    where k."Company" = 'AMZN' and s.date = $dt
+    order by k."Indicator Name";
 
 
 
 
 
 //A Share is a pointer to another Snowflake account
-        select * 
-        from zepl_us_stocks_daily.public.stock_history
-        where symbol = 'SBUX'
-        order by date desc;
+        select top 100 * 
+        from economy_data_atlas.economy.usindssp2020
+        where "Company" = 'SBUX'
+        order by "Date" desc;
 
         //Origin means it's a read-only share
         show databases;
 
         //Shares are read-only pointers - uncomment this command and watch it fail
-        -- delete from zepl_us_stocks_daily.public.stock_history;
+        -- delete from economy_data_atlas.economy.usindssp2020;
 
 
 
