@@ -4,8 +4,13 @@ Financial Services Hand-On-Labs (HOL) for User
 1. Find & Replace in Snowsight for:
     Mac: cmd-shift-h
     Windows: ctrl-shift-h
-2. Replace all occurrences of schema hol_schemaName with your schema (which is the same as your username)
+2. Replace all occurrences of schema hol_schemaName with your current_schema (which is the same as your username)
 
+*/
+
+select current_schema();
+
+/*
 --Core Lab
     --Part 1: Time Travel: 0-90 days Undo
     --Part 2: Zero Copy Clone: "Game Changer"
@@ -142,7 +147,7 @@ use schema hol_uat.hol_schemaName;
 
 
 --Uncomment this section to test undrop table and schema
-/*
+
     --table
     drop table hol_uat.hol_schemaName.trade;
     
@@ -156,7 +161,7 @@ use schema hol_uat.hol_schemaName;
     select count(*) from hol_uat.hol_schemaName.trade;
     
 
-    
+/*    
     --schema
     drop schema hol_schemaName;
     
@@ -197,13 +202,14 @@ use schema hol_uat.hol_schemaName;
 
 
     --https:--www.snowflake.com/blog/tpc-ds-now-available-snowflake-samples/
+    /*
                 select top 300 * from snowflake_sample_data.tpcds_sf10tcl.store_sales;--29b
                 select top 300 * from snowflake_sample_data.tpcds_sf10tcl.item;--402k
                 select top 300 * from snowflake_sample_data.tpcds_sf10tcl.store;--1.5k
                 select top 300 * from snowflake_sample_data.tpcds_sf10tcl.customer;--65m
                 select top 300 * from snowflake_sample_data.tpcds_sf10tcl.date_dim;--73k
                 select top 300 * from date_dim where year(d_date) = 2000 and month(d_date) = 6;
-
+    */
 
 
     -----------------------------------------------------
@@ -211,7 +217,7 @@ use schema hol_uat.hol_schemaName;
         use warehouse hol_power;
 
                     --Best Practice: Create every table with an Order By column for faster & efficient querying
-                    --medium 2m19s; large 1m1s; xlarge 50s
+                    --when only one user: medium 2m19s; large 1m1s; xlarge 50s
                     create or replace transient table hol_uat.hol_schemaName.sales_denorm1 as 
                     select *
                     from snowflake_sample_data.tpcds_sf10tcl.store_sales ss
@@ -239,9 +245,12 @@ use schema hol_uat.hol_schemaName;
 
         --Best Practice for business-facing tables: cluster key for auto-clustering (instant as it's a metadata operation)
         alter table hol_schemaName.sales_denorm1 cluster by (ss_sold_date_sk, ss_item_sk, ss_store_sk, ss_customer_sk);
+
+            --change schema
+            use schema hol_schemaName;
         
             --notice cluster_by and automatic_clustering
-            show tables like 'sales_denorm1%';
+            show tables like 'SALES_DENORM1%';
 
 
 
@@ -261,18 +270,18 @@ use schema hol_uat.hol_schemaName;
     select top 300 *
     from hol_uat.hol_schemaName.sales_denorm1;
 
-    --Prep for Dashboards: make a Chart: which managers had the most sales?
-        --Chart | Bar
-        --Appearance | Orientation | "Horizontal Icon"
-        --CNT(SUM), S_MANAGER Y-Axis; Orientation Horizontal
-        
+    
+    --Which managers had the most sales?
     select s_manager, count(*) cnt
     from hol_uat.hol_schemaName.sales_denorm1
     where s_manager is not null
     group by 1
     order by 2 desc, 1;
 
-
+    --Let's make a Chart (You can use this for Dashboards later):
+        --Chart | Bar (Chart Type)
+        --Appearance | Orientation | "Horizontal Icon"
+        --CNT(SUM), S_MANAGER Y-Axis; Orientation Horizontal
 
 
 
