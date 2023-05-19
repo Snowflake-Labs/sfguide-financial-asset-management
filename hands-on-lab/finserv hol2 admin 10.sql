@@ -131,7 +131,7 @@ select
         
     -- ddl_ownership
         '        grant ownership on schema hol_uat.' || l.schemaname || ' to role hol_rl;' ||
-        '        grant ownership on table hol_uat.' || l.schemaname || '.trade to role hol_rl;'
+        '        grant ownership on table hol_uat.' || l.schemaname || '.trade to role hol_rl revoke current grants;'
         
         as ddl_to_run,
     l.*
