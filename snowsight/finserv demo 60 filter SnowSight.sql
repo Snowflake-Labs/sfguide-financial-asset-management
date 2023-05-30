@@ -12,7 +12,7 @@ Recommended Setup:
     * Set it was auto-suspend of 1 minute to save costs
     
 Note:
-    * These filters are used by the "finserv demo 35 SnowSight" script.
+    * These filters are used by the "finserv demo 60 SnowSight" script.
 
 */
 
