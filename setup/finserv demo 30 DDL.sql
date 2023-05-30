@@ -1,10 +1,9 @@
 /*
 
-size up so we complete quicker put pay the same cost
-create traders table using limit_trader parameter defaulted at 1000 traders
-create watchlist table which authorizes which stocks are eligible for trading
+size up so we complete quicker but pay the same cost
+create traders table using limit_trader parameter defaulted at 100 traders
 populate 3 billion synthetic trades
-create window-function views for position
+create window-function views for position (real-time trades, cash, and PnL)
 
 
 */
