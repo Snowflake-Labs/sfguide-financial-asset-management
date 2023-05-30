@@ -116,7 +116,7 @@ What we will see
 
 
 
-//Instant Real-Time Market Data with neither copying nor FTP; Save 2-6 months of works
+//Instant Real-Time Market Data with neither copying nor FTP; Save 2-6 months of work
     select * 
     from economy_data_atlas.economy.usindssp2020
     where "Company" = 'SBUX'
