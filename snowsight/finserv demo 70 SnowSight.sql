@@ -51,14 +51,24 @@ What we will see
 --Row 2
 
 --Portfolio PnL Top 10 Bar Chart
+--Bar Chart: PnL (sum), Symbol (none) Series, Symbol (none) X-Axis
+--Grouping (Stacked); Label X-Axis (Symbol)
     select top 10 symbol, round(PnL) PnL
     from public.position_now where trader = :fstrader
     order by PnL desc;
 
 --Portfolio PnL Bottom 10 Bar Chart
+--Line Chart
+--Pnl(sum); Symbol(none) Series; Symbol(none X-Axis)
+--Grouping (Stacked)
     select top 10 symbol, round(PnL) PnL
     from public.position_now where trader = :fstrader
     order by PnL asc;
+    
+ --Portfolio PnL Current Scorecard
+ --ScoreCard Chart
+    select round(sum(PnL)) PnL
+    from public.position_now where trader = :fstrader;
 
 
 ----------------------------------------------------------------------------------------------------------
