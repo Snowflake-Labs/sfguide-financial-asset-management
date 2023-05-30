@@ -210,4 +210,5 @@ select * from trader order by 1;
 
 ----------------------------------------------------------------------------------------------------------
 --size down to save credits
+    alter warehouse finservam_devops_wh suspend;
     alter warehouse finservam_devops_wh set warehouse_size = 'small';
