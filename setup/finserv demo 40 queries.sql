@@ -59,7 +59,7 @@ What we will see
     //notice 24 hour global cache on 2nd execution
 
     select symbol, date, trader, cash_cumulative, num_shares_cumulative, close, market_value, PnL
-    from position where date >= '2019-01-06' and symbol = 'TSLA' and trader = 'charles'
+    from position where date >= '2019-01-01' and symbol = 'TSLA' and trader = 'charles'
     order by date;
 
     select symbol, date, trader, cash_cumulative, num_shares_cumulative, close, market_value, PnL
