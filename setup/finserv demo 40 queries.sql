@@ -74,7 +74,7 @@ What we will see
     -- alter user set use_cached_result=true; 
 
     --metadata cache
-    select count(*) from trade;
+    select count(*), min(date), max(date) from trade;
     
 
       //dynamic view using window functions so only pay storage for trade table; trade table drives all
@@ -116,7 +116,7 @@ What we will see
 
 
 
-//Instant Real-Time Market Data with neither copying nor FTP
+//Instant Real-Time Market Data with neither copying nor FTP; Save 2-6 months of work
     select * 
     from economy_data_atlas.economy.usindssp2020
     where "Company" = 'SBUX'
@@ -164,7 +164,7 @@ create database finservam_qa1 clone finservam;
 
 
 
-  //we Time Travel to see before the (DML) delete
+  //we Time Travel to see before the (DML) update
   select *
   from finservam_qa1.public.trade 
   before (statement => $queryid)
@@ -172,7 +172,7 @@ create database finservam_qa1 clone finservam;
   
   
   -----------------------------------------------------
-  --UNDO our delete
+  --UNDO our update
   insert into finservam_qa1.public.trade 
   select *
   from finservam_qa1.public.trade 
@@ -196,4 +196,4 @@ create database finservam_qa1 clone finservam;
   //if we don't want to wait for auto-suspend
     alter warehouse finservam_devops_wh suspend;
 
-    use schema finservam.public;
+    use schema finservam.public; use role finservam_admin;
