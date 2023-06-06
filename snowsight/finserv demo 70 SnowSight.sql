@@ -26,7 +26,7 @@ What we will see
 --Row 1
 
 --Symbol Position Over Time Line Chart
---Line Chart: cash_used, market_value, pnl, num_shares_cumulative, close
+--Line Chart [Set Aggregation to Average]: cash_used, market_value, pnl, num_shares_cumulative, close
     --X-Axis: Date (Year)
     select
         symbol, date, trader, round(cash_cumulative) * -1 cash_used, num_shares_cumulative, round(close,2) close, 
