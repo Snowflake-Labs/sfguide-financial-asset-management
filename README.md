@@ -20,9 +20,11 @@ Big banks and Asset managers have spent millions of dollars to accurately give a
 
 
 ## Demo and Technical Deep-Dive of Version 1.0
-[Youtube Playlist](https://www.youtube.com/playlist?list=PLyKI7j42vSkbryDXuB7kEhzk66lmdNJ3Z)
+[Youtube Demo and build-from-scratch](https://www.youtube.com/watch?v=HkrRXMHDd-E)
 
-[Medium Blog](https://allenwongtech.medium.com/what-would-snowflake-for-an-asset-manager-look-like-part-1-a0583c0e5822)
+[Quickstart Step-by-Step Guide](https://quickstarts.snowflake.com/guide/financial-services-asset-management-snowflake/#0)
+
+[Medium Blog](https://medium.com/snowflake/open-sourcing-a-snowflake-financial-services-asset-management-system-3-billion-trades-with-1a2a0e04671a)
 
 ## How to Install (Takes under 7 minutes; each script is idempotent)
 
@@ -33,22 +35,17 @@ Big banks and Asset managers have spent millions of dollars to accurately give a
     Run Script 20: Connects to the Data Marketplace to get free stock history
     Run Script 30: Populates the trade table.  Creates Window Function Views for cash, positions, and PnL
     Run Script 40: This is the smoke test and what the business queries
-
-## How to Setup SnowSight Demo:
-    In snowsight subfolder:
-        Add filters in script "33 filter SnowSight"
-        Build SnowSight dashboard using script "35 SnowSight".
     
 ### Optional Setting:
-In the first few lines of script 30, you can set the variable *limit_trader = x*.
+In [line 27 of script 30](https://github.com/Snowflake-Labs/sfguide-financial-asset-management/blob/master/setup/finserv%20demo%2030%20DDL.sql#L27), you can set the variable *limit_trader = x*.
 
 It's default is set to 100 traders to populate in the trader table which when multplied by 40+ years of daily trades will create 3-billion-plus trades. 
     
 limit_trader  | Trades generated | Script 30 Run-time with xxlarge compute
 --------------|------------------|------------------------------
 100 (default) | 3 billion        | under 4 minutes
-200           |                  | 
-300           |                  | 
+200           | 6 billion        | 
+300           | 9 billion        | 
     
 ## Partner Demos on top of this demo
 
@@ -58,4 +55,3 @@ limit_trader  | Trades generated | Script 30 Run-time with xxlarge compute
   
 ## To remove Demo
     Run "optional\finserv 90 reset.sql".
-    If you implemented SnowSight, delete Filters and Dashboard in snowsight subfolder: scripts 33 and 35.
