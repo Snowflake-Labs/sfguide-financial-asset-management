@@ -28,8 +28,7 @@ Big banks and Asset managers have spent millions of dollars to accurately give a
 
 ## How to Install (Takes under 7 minutes; each script is idempotent)
 
-    Create a database named snowflake_sample_data from the sample_data share [see above pic]
-    Find a share named "Knoema Economy Data Atlas" from the Snowflake Data Marketplace and name the database economy_data_atlas
+    Find a share named "Knoema Economy Data Atlas" from the Snowflake Data Marketplace and mount the database as economy_data_atlas
     
     Run Script 10: Sets up the environment
     Run Script 20: Connects to the Data Marketplace to get free stock history
