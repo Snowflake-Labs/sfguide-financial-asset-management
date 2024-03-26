@@ -1,21 +1,17 @@
 # Financial Services Asset Management on Snowflake Demo Version 2.0
 
 ## Releases
+    v3.0    Use Cybersyn share
     v2.0    Use Knoema instead of deprecated Zepl Share; Added Python Faker for synthetic trader creation; Rewrote Snowsight Tiles
             Removed: company_profile, stock_latest, finservam_datascience_wh, snowflake_sample_data, share_now, middleware
     v1.0    Use Zepl Marketplace share
 
 ### Problem
-Big banks and Asset managers have spent millions of dollars to accurately give a Single Version of Truth (SVOT) in real-time.  What would such a system look like on Snowflake?
-
-### Solution
-    Snowflake has high performance at low TCO due to its out-of-the-box operation, near-zero maintenance, and low learning curve
-    SVOT makes trading, risk management, regulatory reporting, and Financial Services big data use cases significantly easier
-    Unlimited Compute and Concurrency enable quick data-driven decisions
+What would a big data Financial Services Asset Manager look like on Snowflake?
 
 ### What we will see
-    Use the Snowflake Data Marketplace to instantly get stock history so the business doesn't have to wait for IT.
-    Populate only the trade table and use window functions to generate cash, positions, and Profit-and-Loss (PnL) so that you can have real-time updates.
+    Instant access to start market prices with neither copying nor FTP.
+    Use window functions real-time trades, cash, positions, and Profit-and-Loss (PnL)
     Use SnowSight - Snowflake's complimentary User Interface (UI) - to generate dashboards that can be shared with the business.
 
 
@@ -26,9 +22,9 @@ Big banks and Asset managers have spent millions of dollars to accurately give a
 
 [Medium Blog](https://medium.com/snowflake/open-sourcing-a-snowflake-financial-services-asset-management-system-3-billion-trades-with-1a2a0e04671a)
 
-## How to Install (Takes under 7 minutes; each script is idempotent)
+## How to Install (each script is idempotent; takes 7 minutes)
 
-    Find a share named "Knoema Economy Data Atlas" from the Snowflake Data Marketplace and mount the database as economy_data_atlas
+    Find a share named [Cybersyn Financial & Economic Essentials](https://app.snowflake.com/marketplace/listing/GZTSZAS2KF7/cybersyn-financial-economic-essentials) and mount the share as a database named Financial_Economic_Essentials (Notice 1 underscore between each word)
     
     Run Script 10: Sets up the environment
     Run Script 20: Connects to the Data Marketplace to get free stock history
