@@ -1,4 +1,4 @@
-# Snowflake Financial Services Asset Management Snowflake Demo Version 3
+# Snowflake Financial Services Asset Management Demo Version 3
 
 ## Releases
     v3.0    Use Cybersyn share
